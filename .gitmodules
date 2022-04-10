@@ -1,0 +1,3 @@
+[submodule "ftb"]
+	path = ftb
+	url = https://github.com/felixbrendel/ftb
