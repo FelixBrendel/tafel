@@ -35,8 +35,8 @@ int main() {
         timetable.free();
     };
 
-    station.print(0);
-    timetable.print(0);
+    station.print();
+    timetable.print();
 
 
     return 0;

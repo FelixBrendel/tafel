@@ -323,6 +323,14 @@ namespace xml {
                         parsed = read_bool(attribs, (bool*)pipe.destination);
                     } else if (pipe.type == Data_Type::Integer) {
                         parsed = read_int(attribs, (int*)pipe.destination);
+                    }  else if (pipe.type == Data_Type::Maybe_Integer) {
+                        Maybe<int>* mi = (Maybe<int>*)(pipe.destination);
+                        parsed = read_int(attribs, &(mi->value));
+                        mi->__exists = true;
+                    }  else if (pipe.type == Data_Type::Maybe_Boolean) {
+                        Maybe<bool>* mi = (Maybe<bool>*)(pipe.destination);
+                        parsed = read_bool(attribs, &(mi->value));
+                        mi->__exists = true;
                     } else {
                         // check user type
                         reader_function fun = reader_functions[(u8)pipe.type];

@@ -33,6 +33,7 @@ struct Empty {};
         }                                       \
     }                                           \
 
+DEFINE_BASIC_TYPE_MAYBE(bool);
 DEFINE_BASIC_TYPE_MAYBE(u8);
 DEFINE_BASIC_TYPE_MAYBE(u16);
 DEFINE_BASIC_TYPE_MAYBE(u32);
@@ -61,10 +62,8 @@ namespace xml {
         String = 1 << 7,
         Integer,
         Boolean,
-        Maybe_String,
         Maybe_Integer,
         Maybe_Boolean
-
     };
 
     void init();

@@ -12,7 +12,7 @@ namespace db {
         bool   is_db;
 
         void free();
-        void print(u32 indentation = 0);
+        void print();
     };
 
     struct Trip_Label {
@@ -38,19 +38,19 @@ namespace db {
         String      type;
         Maybe<Time> valid_from;
         Maybe<Time> valid_to;
-        int         code;
+        Maybe<int>  code;
         String      text_internal;
         String      text_external;
         String      category;
-        s32         category_external;
+        Maybe<s32>  category_external;
         Maybe<Time> time_stamp;
         String      priority;
         String      owner;
         String      external_link;
-        s32         deleted;
+        Maybe<s32>  deleted;
 
         void free();
-        void print(u32 indentation = 0);
+        void print();
     };
 
     struct Event {
@@ -73,7 +73,7 @@ namespace db {
         Array_List<Message> messages;
 
         void free();
-        void print(u32 indentation = 0);
+        void print();
     };
 
     struct Timetable_Stop {
@@ -86,7 +86,7 @@ namespace db {
         Array_List<Message>  messages;
 
         void free();
-        void print(u32 indentation = 0);
+        void print();
     };
 
     struct Timetable {
@@ -96,7 +96,7 @@ namespace db {
         Array_List<Message>        messages;
 
         void free();
-        void print(u32 indentation = 0);
+        void print();
     };
 
     void init();

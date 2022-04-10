@@ -111,15 +111,16 @@ namespace db {
 
         create_pipe("id",   xml::Data_Type::String,  &message->id);
         create_pipe("t",    xml::Data_Type::String,  &message->type);
-        create_pipe("c",    xml::Data_Type::Integer, &message->code);
         create_pipe("int",  xml::Data_Type::String,  &message->text_internal);
         create_pipe("ext",  xml::Data_Type::String,  &message->text_external);
         create_pipe("cat",  xml::Data_Type::String,  &message->category);
-        create_pipe("ec",   xml::Data_Type::Integer, &message->category_external);
         create_pipe("pr",   xml::Data_Type::String,  &message->priority);
         create_pipe("o",    xml::Data_Type::String,  &message->owner);
         create_pipe("elnk", xml::Data_Type::String,  &message->external_link);
-        create_pipe("del",  xml::Data_Type::Integer, &message->deleted);
+
+        create_pipe("c",    xml::Data_Type::Maybe_Integer, &message->code);
+        create_pipe("ec",   xml::Data_Type::Maybe_Integer, &message->category_external);
+        create_pipe("del",  xml::Data_Type::Maybe_Integer, &message->deleted);
 
         create_pipe("from", (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, &message->valid_from);
         create_pipe("to",   (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, &message->valid_to);
@@ -411,7 +412,6 @@ namespace db {
     }
 
     Timetable get_timetable(const char* eva_nr, u8 year, u8 month, u8 day, u8 hour) {
-
         Timetable timetable {};
         timetable.messages.init();
         timetable.stops.init();
@@ -464,8 +464,6 @@ namespace db {
 
         return timetable;
     }
-
-
 
 #define DB_MESSAGE_CODES_TPL_LST                                        \
     CODE( 0, R, "Begründung löschen",                  "keine Verspätungsbegründung" ) \
@@ -586,11 +584,11 @@ namespace db {
         if (ds100_nr) ds100_nr.free();
     }
 
-    void Station::print(u32 indentation) {
+    void Station::print() {
         println("Station:");
-        println("  name:   %s", name.data);
-        println("  eva:    %s", eva_nr.data);
-        println("  ds100:  %s", ds100_nr.data);
+        if (name)     println("  name:   %s", name.data);
+        if (eva_nr)   println("  eva:    %s", eva_nr.data);
+        if (ds100_nr) println("  ds100:  %s", ds100_nr.data);
         println("  ist DB: %s", is_db ? "Ja" : "Nein");
         println("");
     }
@@ -614,30 +612,20 @@ namespace db {
         if (external_link) external_link.free();
     }
 
-    void Message::print(u32 indentation) {
+    void Message::print() {
         println( "Message: (ID: %s)", id.data);
         with_indentation (2) {
-            if (text_external) {
-                println("external text: %s", text_external.data);
-            }
-            if (text_internal) {
-                println("internal text: %s", text_internal.data);
-            }
-            if (priority) {
-                println("prio:     %s", priority.data);
-            }
-            if (owner) {
-                println("owner:    %s", owner.data);
-            }
-            if (type) {
-                println("type:    %2s (%s)", type.data, message_type_to_display_string(type));
-            }
-            println("code:    %2d (%s)", code, message_code_to_display_string(code));
-            if (category) {
-                println("category: %s", category.data);
-            }
+            if (text_external)     println("external text:  %s", text_external.data);
+            if (text_internal)     println("internal text:  %s", text_internal.data);
+            if (priority)          println("prio:           %s", priority.data);
+            if (owner)             println("owner:          %s", owner.data);
+            if (type)              println("type:          %2s (%s)", type.data, message_type_to_display_string(type));
+            if (code)              println("code:          %2d (%s)", code.value, message_code_to_display_string(code.value));
+            if (category)          println("category:       %s", category.data);
+            if (category_external) println("category (ext): %d", category_external.value);
+            if (external_link)     println("external link:  %s", external_link.data);
+            if (deleted)           println("deleted:        %d", deleted.value);
         }
-
     }
 
     void Event::free() {
@@ -661,19 +649,11 @@ namespace db {
         }
     }
 
-    void Event::print(u32 indentation) {
-        if (planned_time) {
-            println("time:  %02d:%02d Uhr", planned_time.HH, planned_time.mm);
-        }
-        if (changed_time) {
-            println("time (changed):  %02d:%02d Uhr", changed_time.HH, changed_time.mm);
-        }
-        if (planned_path.data) {
-            println("path: %.50s%s", planned_path.data, strlen(planned_path.data) > 50 ? "..." : "");
-        }
-        if (planned_platform) {
-            println("platform: %s", planned_platform.data);
-        }
+    void Event::print() {
+        if (planned_time)      println("time:  %02d:%02d Uhr", planned_time.HH, planned_time.mm);
+        if (changed_time)      println("time (changed):  %02d:%02d Uhr", changed_time.HH, changed_time.mm);
+        if (planned_path.data) println("path: %.50s%s", planned_path.data, strlen(planned_path.data) > 50 ? "..." : "");
+        if (planned_platform)  println("platform: %s", planned_platform.data);
         if (messages.count) {
             println("Event Messages:");
             with_indentation(2) {
@@ -701,7 +681,7 @@ namespace db {
         }
     }
 
-    void Timetable_Stop::print(u32 indentation) {
+    void Timetable_Stop::print() {
         println("%s %s", trip_label.category.data,
                 (depature_event)
                 ? (depature_event.line.data
@@ -714,22 +694,23 @@ namespace db {
         with_indentation(2) {
             println("ID: %s", id.data);
             if (arrival_event) {
-                println("<-");
+                println("<- Ankunft");
                 with_indentation(2)
                     arrival_event.print();
             }
-            if (depature_event) {
-                println("->");
-                with_indentation(2)
-                    depature_event.print(indentation);
-            }
-        }
 
-        if (messages.count) {
-            println("Stop Messages:");
-            with_indentation(2) {
-                for (Message m : messages) {
-                    m.print(indentation+2);
+            if (depature_event) {
+                println("-> Abfahrt");
+                with_indentation(2)
+                    depature_event.print();
+            }
+
+            if (messages.count) {
+                println("Stop Messages:");
+                with_indentation(2) {
+                    for (Message m : messages) {
+                        m.print();
+                    }
                 }
             }
         }
@@ -755,15 +736,19 @@ namespace db {
         }
     }
 
-    void Timetable::print(u32 indentation) {
+    void Timetable::print() {
         println("Timetable:");
         println("  name: %s", station_name.data);
         println("  eva:  %s", station_eva_nr.data);
         println("  stops:");
 
         with_indentation(4) {
+            int c = 0;
             for (Timetable_Stop s : stops) {
                 s.print();
+                ++c;
+                if (c == 5)
+                    break;
             }
         }
 
