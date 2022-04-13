@@ -30,11 +30,11 @@ namespace db {
             pos++;
         }
 
-        time->YY = numerical_value(pos[0]) * 10 + numerical_value(pos[1]);
-        time->MM = numerical_value(pos[2]) * 10 + numerical_value(pos[3]);
-        time->dd = numerical_value(pos[4]) * 10 + numerical_value(pos[5]);
-        time->HH = numerical_value(pos[6]) * 10 + numerical_value(pos[7]);
-        time->mm = numerical_value(pos[8]) * 10 + numerical_value(pos[9]);
+        time->year   = numerical_value(pos[0]) * 10 + numerical_value(pos[1]);
+        time->month  = numerical_value(pos[2]) * 10 + numerical_value(pos[3]);
+        time->day    = numerical_value(pos[4]) * 10 + numerical_value(pos[5]);
+        time->hour   = numerical_value(pos[6]) * 10 + numerical_value(pos[7]);
+        time->minute = numerical_value(pos[8]) * 10 + numerical_value(pos[9]);
 
         return length;
     }
@@ -244,6 +244,11 @@ namespace db {
                     .open_handler = parse_message,
                     .user_data    = &(last->messages)
                 });
+                xml::push_handler_to_parser_stack({
+                    .key          = "ref", // reference
+                    .open_handler = trip_label_parser,
+                    .user_data = &last->trip_label
+                });
 
                 return xml::parse_attributes(xml);
             },
@@ -411,15 +416,16 @@ namespace db {
 
     }
 
-    Timetable get_timetable(const char* eva_nr, u8 year, u8 month, u8 day, u8 hour) {
+    Timetable get_timetable(const char* eva_nr, Time time) {
         Timetable timetable {};
         timetable.messages.init();
         timetable.stops.init();
 
         char date_str[10];
         char hour_str[10];
-        sprintf(date_str, "%02d%02d%02d", year, month, day);
-        sprintf(hour_str, "%02d", hour);
+        
+        sprintf(date_str, "%02d%02d%02d", time.year-2000, time.month, time.day);
+        sprintf(hour_str, "%02d", time.hour);
         String_Builder sb = String_Builder::create_from({
             "https://api.deutschebahn.com/timetables/v1/plan/",
             eva_nr, "/",
@@ -650,8 +656,8 @@ namespace db {
     }
 
     void Event::print() {
-        if (planned_time)      println("time:  %02d:%02d Uhr", planned_time.HH, planned_time.mm);
-        if (changed_time)      println("time (changed):  %02d:%02d Uhr", changed_time.HH, changed_time.mm);
+        if (planned_time)      println("time:  %02d:%02d Uhr", planned_time.hour, planned_time.minute);
+        if (changed_time)      println("time (changed):  %02d:%02d Uhr", changed_time.hour, changed_time.minute);
         if (planned_path.data) println("path: %.50s%s", planned_path.data, strlen(planned_path.data) > 50 ? "..." : "");
         if (planned_platform)  println("platform: %s", planned_platform.data);
         if (messages.count) {
@@ -670,8 +676,8 @@ namespace db {
 
         trip_label.free();
 
-        arrival_event.free();
-        depature_event.free();
+        if (arrival_event)  arrival_event.free();
+        if (depature_event) depature_event.free();
 
         if (messages.data) {
             for (Message m : messages) {

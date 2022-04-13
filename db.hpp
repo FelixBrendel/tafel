@@ -1,7 +1,9 @@
 #pragma once
+#include <time.h>
 #include "ftb/arraylist.hpp"
 #include "ftb/print.hpp"
 #include "net.h"
+#include "time.hpp"
 #include "xml.hpp"
 
 namespace db {
@@ -23,14 +25,6 @@ namespace db {
         String train_number; // eg 16
 
         void free();
-    };
-
-    struct Time {
-        u8 YY;
-        u8 MM;
-        u8 dd;
-        u8 HH;
-        u8 mm;
     };
 
     struct Message {
@@ -104,7 +98,7 @@ namespace db {
 
     Station find_station(const char* name);
 
-    Timetable get_timetable(const char* eva_nr, u8 year, u8 month, u8 day, u8 hour);
+    Timetable get_timetable(const char* eva_nr, Time time);
     Timetable get_full_changes(const char* eva_nr);
     Timetable get_recent_changes(const char* eva_nr);
     const char* message_code_to_display_string(int code);
