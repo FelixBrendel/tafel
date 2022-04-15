@@ -2,10 +2,13 @@
 #include "ftb/types.hpp"
 
 struct Time_Diff {
-    u8  days;     // [1-31]
-    u8  hours;    // [0-23]
-    u8  minutes;  // [0-59]
+    s8  days;     // [1-31]
+    s8  hours;    // [0-23]
+    s8  minutes;  // [0-59]
     f32 seconds;  // [0-59.99…]
+
+    f32 to_seconds();
+    s32 to_minutes();
 };
 
 struct Time {
@@ -19,6 +22,8 @@ struct Time {
     void print();
     Time_Diff operator-(Time other);
     Time operator+(Time_Diff delta);
+
+    s32 compare(Time other); // returns -1, 0 or 1
 
     static Time now();
 };

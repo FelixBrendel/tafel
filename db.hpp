@@ -7,6 +7,7 @@
 #include "xml.hpp"
 
 namespace db {
+
     struct Station {
         String name;
         String eva_nr;
@@ -19,12 +20,13 @@ namespace db {
 
     struct Trip_Label {
         String filter_tags;
-        String trip_Type;
+        String trip_type;
         String owner;
         String category;     // eg "ICE", "RE", "S"
         String train_number; // eg 16
 
         void free();
+        void update(Trip_Label* other);
     };
 
     struct Message {
@@ -47,6 +49,11 @@ namespace db {
         void print();
     };
 
+    struct Message_List : Array_List<Message> {
+        void update(Message_List* other);
+    };
+
+
     struct Event {
         String      planned_path;
         String      changed_path;
@@ -64,8 +71,9 @@ namespace db {
         String      changed_distant_endpoint;
         s32         distance_change;
         String      line;
-        Array_List<Message> messages;
+        Message_List messages;
 
+        void update(Event* other);
         void free();
         void print();
     };
@@ -74,23 +82,33 @@ namespace db {
         String               id;
         String               eva_nr;
 
-        Trip_Label           trip_label;
+        Maybe<Trip_Label>    trip_label;
         Maybe<Event>         arrival_event;
-        Maybe<Event>         depature_event;
-        Array_List<Message>  messages;
+        Maybe<Event>         departure_event;
+        Message_List  messages;
 
         void free();
         void print();
+
+        void update(Timetable_Stop* other);
+
+        Time get_relevant_time() const;
+    };
+
+    enum struct Merge_Type {
+        Merge_Stops,
+        Update_Stops,
     };
 
     struct Timetable {
         String                     station_name;
         String                     station_eva_nr;
         Array_List<Timetable_Stop> stops;
-        Array_List<Message>        messages;
+        Message_List               messages;
 
+        void update(Timetable* other, Merge_Type m_type);
         void free();
-        void print();
+        void print(Time after = {});
     };
 
     void init();
@@ -98,7 +116,7 @@ namespace db {
 
     Station find_station(const char* name);
 
-    Timetable get_timetable(const char* eva_nr, Time time);
+    Timetable get_timetable(const char* eva_nr, Time time_start, u32 num_hours);
     Timetable get_full_changes(const char* eva_nr);
     Timetable get_recent_changes(const char* eva_nr);
     const char* message_code_to_display_string(int code);

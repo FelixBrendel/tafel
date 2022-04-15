@@ -4,8 +4,10 @@
 #include "ftb/print.hpp"
 #include "ftb/types.hpp"
 #include "net.h"
+#include "time.hpp"
 #include "xml.hpp"
 #include <cstdio>
+#include <cstring>
 
 namespace db {
     const char* authorization_token = "Bearer 77782dd921d7957515e62515f683374d";
@@ -30,7 +32,7 @@ namespace db {
             pos++;
         }
 
-        time->year   = numerical_value(pos[0]) * 10 + numerical_value(pos[1]);
+        time->year   = numerical_value(pos[0]) * 10 + numerical_value(pos[1]) + 2000;
         time->month  = numerical_value(pos[2]) * 10 + numerical_value(pos[3]);
         time->day    = numerical_value(pos[4]) * 10 + numerical_value(pos[5]);
         time->hour   = numerical_value(pos[6]) * 10 + numerical_value(pos[7]);
@@ -66,33 +68,33 @@ namespace db {
 
                 ++cursor;
             }
-            printf("%.*s\n", cursor, s);
+            println("%.*s", cursor, s);
 
             if (s[cursor]) {
-                printf("...\n");
+                println("...");
             }
-            printf("\n");
+            println("");
         }
     }
 
     void print_response(Response r, int string_lines = 10) {
-        printf("time:          %f\n", r.elapsed_time);
-        printf("response_code: %ld\n", r.response_code);
-        printf("\n"
-               "header:\n"
-               "-------\n");
+        println("time:          %f", r.elapsed_time);
+        println("response_code: %ld", r.response_code);
+        println("");
+        println("header:");
+        println("-------");
         print_string_lines(r.header.data, string_lines);
-        printf("content:\n"
-               "--------\n");
+        println("content:");
+        println("--------");
         print_string_lines(r.response.data, string_lines);
-        fflush(stdout);
     }
 
     u32 trip_label_parser (char* xml, void* vp_stop) {
-        Trip_Label* trip_label = (Trip_Label*)vp_stop;
+        Maybe<Trip_Label>* trip_label = (Maybe<Trip_Label>*)vp_stop;
+        trip_label->__exists = true;
 
         create_pipe("f", xml::Data_Type::String, &trip_label->filter_tags);
-        create_pipe("t", xml::Data_Type::String, &trip_label->trip_Type);
+        create_pipe("t", xml::Data_Type::String, &trip_label->trip_type);
         create_pipe("o", xml::Data_Type::String, &trip_label->owner);
         create_pipe("c", xml::Data_Type::String, &trip_label->category);
         create_pipe("n", xml::Data_Type::String, &trip_label->train_number);
@@ -132,6 +134,7 @@ namespace db {
     u32 parse_event_start(char* xml, void* vp_event) {
         Maybe<Event>* event = (Maybe<Event>*)vp_event;
         event->__exists = true;
+        event->messages.init();
         defer {
             if (event->planned_path.data)
                 event->planned_path = html_decode_string(event->planned_path, true);
@@ -208,6 +211,7 @@ namespace db {
         Timetable* timetable = (Timetable*)vp_timetable;
 
         create_pipe("station", xml::Data_Type::String, &timetable->station_name);
+        create_pipe("eva",     xml::Data_Type::String, &timetable->station_eva_nr);
         defer {
             if (timetable->station_name.data)
                 timetable->station_name = html_decode_string(timetable->station_name, true);
@@ -219,6 +223,7 @@ namespace db {
                 Timetable* timetable = (Timetable*)vp_timetable;
                 timetable->stops.append({});
                 Timetable_Stop* last = &timetable->stops.last_element();
+                last->messages.init();
 
                 create_pipe("id", xml::Data_Type::String, &last->id);
 
@@ -237,7 +242,7 @@ namespace db {
                     .key           = "dp", // departure event
                     .open_handler  = parse_event_start,
                     .close_handler = parse_event_end,
-                    .user_data     = &last->depature_event
+                    .user_data     = &last->departure_event
                 });
                 xml::push_handler_to_parser_stack({
                     .key          = "m", // messages
@@ -348,91 +353,29 @@ namespace db {
         return station;
     }
 
-    void merge_timetables(Timetable* base, Timetable* update) {
-        // NOTE(Felix): this destroys the update timetable, as it is no longer
-        //   needed
-
-
+    s32 cmp_timetable_stop_by_id(const Timetable_Stop* t1, const Timetable_Stop* t2) {
+        // TODO(Felix): depends on null termninator
+        return strcmp(t1->id.data, t2->id.data);
     }
 
-    void full_update_timetable(Timetable* tt, const char* eva_nr) {
-        /**
-         * <timetable>
-         *   <s id="" eva="">
-         *     <m id="" t="" from="" to="" cat="" ts="" ts-tts="" pr="">
-         *     <ar ppth="" pp="" pt="" l="">
-         *       <m id="" t="" c="" ts="" ts-tts=""/>
-         *     </ar>
-         *     <dp ppth="" pp="" pt="" l="">
-         *       <m id="" t="" c="" ts="" ts-tts="">
-         *     </dp>
-         *     <tl f="" t="" o="" c="" n="">
-         *   </s>
-         * </timetable>
-         * */
-        Timetable update_timetable {};
-        update_timetable.messages.init();
-        update_timetable.stops.init();
-
-        char date_str[10];
-        char hour_str[10];
-        String_Builder sb = String_Builder::create_from({
-            "https://api.deutschebahn.com/timetables/v1/fchg/",
-            eva_nr,
-        });
-
-        char* url = sb.build();
-        defer {
-            sb.deinit();
-            free(url);
-        };
-
-        Request req {
-            .authorization = authorization_token,
-            .accept        = "application/xml",
-            .url           = url,
-        };
-
-        Response res = net_request(req);
-        print_response(res, 10000);
-        defer { res.free(); };
-
-
-        xml::push_handler_to_parser_stack({
-            .key           = "timetable",
-            .open_handler  = timetable_parser_open,
-            .close_handler = timetable_parser_close,
-            .user_data     = &update_timetable
-        });
-
-        xml::parse(res.response.data);
-        xml::pop_handler_from_parser_stack();
-
-        update_timetable.print();
-
-        merge_timetables(tt, &update_timetable);
-
-        update_timetable.free();
-
+    void sort_timetable_stops_by_ids(Timetable* t) {
+        t->stops.sort(cmp_timetable_stop_by_id);
     }
 
-    Timetable get_timetable(const char* eva_nr, Time time) {
+    void sort_timetable_stops_by_times(Timetable* t) {
+        t->stops.sort([](const Timetable_Stop* tts1, const Timetable_Stop* tts2) -> s32 {
+            Time t1 = tts1->get_relevant_time();
+            Time t2 = tts2->get_relevant_time();
+
+            return t1.compare(t2);
+        });
+    }
+
+    Timetable get_timetable_from_url(String_Builder sb) {
         Timetable timetable {};
         timetable.messages.init();
         timetable.stops.init();
 
-        char date_str[10];
-        char hour_str[10];
-        
-        sprintf(date_str, "%02d%02d%02d", time.year-2000, time.month, time.day);
-        sprintf(hour_str, "%02d", time.hour);
-        String_Builder sb = String_Builder::create_from({
-            "https://api.deutschebahn.com/timetables/v1/plan/",
-            eva_nr, "/",
-            date_str, "/",
-            hour_str
-        });
-
         char* url = sb.build();
         defer {
             sb.deinit();
@@ -446,15 +389,16 @@ namespace db {
         };
 
         Response res = net_request(req);
+        defer { res.free(); };
+
         if (res.response_code != 200) {
-            printf(":/");
-            print_response(res);
+            println("sad response.");
+            with_indentation(4) {
+                print_response(res, 10000);
+            }
             return {};
         }
 
-        defer {
-            res.free();
-        };
 
         xml::push_handler_to_parser_stack({
             .key           = "timetable",
@@ -464,9 +408,72 @@ namespace db {
         });
 
         xml::parse(res.response.data);
-        xml::pop_handler_from_parser_stack(); // timetable
+        xml::pop_handler_from_parser_stack();
 
-        full_update_timetable(&timetable, eva_nr);
+        return timetable;
+    }
+
+    Timetable get_recent_changes(const char* eva_nr) {
+        String_Builder sb = String_Builder::create_from({
+            "https://api.deutschebahn.com/timetables/v1/rchg/",
+            eva_nr,
+        });
+
+        return get_timetable_from_url(sb);
+    }
+
+    Timetable get_full_changes(const char* eva_nr) {
+        log_trace();
+        String_Builder sb = String_Builder::create_from({
+            "https://api.deutschebahn.com/timetables/v1/fchg/",
+            eva_nr,
+        });
+
+        return get_timetable_from_url(sb);
+    }
+
+    Timetable get_timetable_one_hour(const char* eva_nr, Time time) {
+        log_trace();
+        char date_str[10];
+        char hour_str[10];
+
+        sprintf(date_str, "%02d%02d%02d", time.year-2000, time.month, time.day);
+        sprintf(hour_str, "%02d", time.hour);
+        String_Builder sb = String_Builder::create_from({
+            "https://api.deutschebahn.com/timetables/v1/plan/",
+            eva_nr, "/",
+            date_str, "/",
+            hour_str
+        });
+
+        return get_timetable_from_url(sb);
+    }
+
+    Timetable get_timetable(const char* eva_nr, Time time, u32 num_hours) {
+        log_trace();
+        if (num_hours == 0)
+            return {};
+
+        Timetable timetable = get_timetable_one_hour(eva_nr, time);
+
+        for (s8 i = 1; i < num_hours; ++i) {
+            Timetable extension =
+                get_timetable_one_hour(eva_nr, time+Time_Diff{.hours=i});
+
+            timetable.update(&extension, Merge_Type::Merge_Stops);
+
+            extension.free();
+        }
+
+        Timetable update = get_full_changes(eva_nr);
+        timetable.update(&update, Merge_Type::Update_Stops);
+        update.free();
+
+        update = get_recent_changes(eva_nr);
+        timetable.update(&update, Merge_Type::Update_Stops);
+        update.free();
+
+        sort_timetable_stops_by_times(&timetable);
 
         return timetable;
     }
@@ -601,11 +608,174 @@ namespace db {
 
     void Trip_Label::free() {
         if (filter_tags)  filter_tags.free();
-        if (trip_Type)    trip_Type.free();
+        if (trip_type)    trip_type.free();
         if (owner)        owner.free();
         if (category)     category.free();
         if (train_number) train_number.free();
     }
+
+#define maybe_take(thing)                       \
+    if (other->thing) {                         \
+        thing = other->thing;                   \
+        zero_out(other->thing);                 \
+    }
+#define maybe_take_maybe_free(thing)            \
+    if (other->thing) {                         \
+        if(thing) thing.free();                 \
+        thing = other->thing;                   \
+        zero_out(other->thing);                 \
+    }
+
+    void Trip_Label::update(Trip_Label* other) {
+        maybe_take(filter_tags);
+        maybe_take(trip_type);
+        maybe_take(owner);
+        maybe_take(category);
+        maybe_take(train_number);
+    }
+
+    void Event::update(Event* other) {
+        maybe_take_maybe_free(planned_path);
+        maybe_take_maybe_free(changed_path);
+        maybe_take_maybe_free(planned_platform);
+        maybe_take_maybe_free(changed_platform);
+        maybe_take(planned_time);
+        maybe_take(changed_time);
+        maybe_take_maybe_free(planned_status);
+        maybe_take_maybe_free(changed_status);
+        maybe_take(hidden);
+        maybe_take(cancellation_time);
+        maybe_take_maybe_free(wings);
+        maybe_take_maybe_free(transition);
+        maybe_take_maybe_free(planned_distant_endpoint);
+        maybe_take_maybe_free(changed_distant_endpoint);
+        maybe_take(distance_change);
+        maybe_take_maybe_free(line);
+
+        messages.update(&other->messages);
+    }
+
+    // NOTE(Felix): This sets the evalues from other to {} when they are used in
+    //   the update, so that other can be freed later without freeing stuff in
+    //   use by `this`
+    void Timetable_Stop::update(Timetable_Stop* other) {
+        maybe_take(eva_nr);
+
+        if (other->trip_label) {
+            if (!this->trip_label) {
+                trip_label = other->trip_label;
+                zero_out(other->trip_label);
+            } else {
+                trip_label.update(&other->trip_label);
+            }
+        }
+
+        if (other->arrival_event) {
+            if (!this->arrival_event) {
+                arrival_event = other->arrival_event;
+                zero_out(other->arrival_event);
+            } else {
+                arrival_event.update(&other->arrival_event);
+            }
+        }
+
+        if (other->departure_event) {
+            if (!this->departure_event) {
+                departure_event = other->departure_event;
+                zero_out(other->departure_event);
+            } else {
+                departure_event.update(&other->departure_event);
+            }
+        }
+
+        messages.update(&other->messages);
+    }
+
+    s32 message_cmp(const Message* m1, const Message* m2) {
+        // TODO(Felix): depends on null termninator
+        return strcmp(m1->id.data, m2->id.data);
+    }
+
+    void Message_List::update(Message_List* other) {
+        this->sort(message_cmp);
+        other->sort(message_cmp);
+
+        u32 old_message_count = count;
+        Array_List<Message*> messages_to_zero_out;
+        messages_to_zero_out.init();
+        defer {
+            for (Message* m: messages_to_zero_out) {
+                zero_out(*m);
+            }
+            messages_to_zero_out.deinit();
+        };
+
+        for (Message& m : *other) {
+            s32 index = sorted_find(m, message_cmp, 0, old_message_count);
+            if (index == -1) {
+                append(m);
+                messages_to_zero_out.append(&m);
+            }
+        }
+    }
+
+    // NOTE(Felix): this removes used info from update timetable, so when it is
+    //   freed later no data will be freed from the live version.
+    void Timetable::update(Timetable* update, Merge_Type m_type) {
+        if (update->station_eva_nr) {
+            if (station_eva_nr)
+                station_eva_nr.free();
+            station_eva_nr = update->station_eva_nr;
+            update->station_eva_nr = {};
+        }
+
+        switch (m_type) {
+            case Merge_Type::Merge_Stops: {
+                sort_timetable_stops_by_ids(this);
+
+                u32 old_stop_count = stops.count;
+
+                // NOTE(Felix): we zero it out so we can free the whole update
+                //   struct wihout deleting live data, we also zero them out
+                //   after adding them to the live data such that the IDs stay
+                //   there, which is needed for sorted_find
+                Array_List<Timetable_Stop*> indices_to_zero_out;
+                indices_to_zero_out.init();
+                defer {
+                    for (Timetable_Stop* ts : indices_to_zero_out) {
+                        zero_out(*ts);
+                    }
+                    indices_to_zero_out.deinit();
+                };
+
+                for (Timetable_Stop& s : update->stops) {
+                    s32 index = stops.sorted_find(s, cmp_timetable_stop_by_id, 0, old_stop_count-1);
+                    if (index == -1) {
+                        // stop from update is not in base
+                        stops.append(s);
+                        indices_to_zero_out.append(&s);
+                    }
+                }
+
+            } break;
+            case Merge_Type::Update_Stops: {
+                sort_timetable_stops_by_ids(update);
+
+                for (Timetable_Stop& s : this->stops) {
+                    s32 index = update->stops.sorted_find(s, cmp_timetable_stop_by_id);
+                    if (index != -1) {
+                        // stop from base has some update
+                        Timetable_Stop* other = &update->stops[index];
+                        s.update(other);
+                    }
+                }
+
+                messages.update(&update->messages);
+
+            } break;
+        }
+    }
+
 
     void Message::free() {
         if (id)            id.free();
@@ -656,8 +826,14 @@ namespace db {
     }
 
     void Event::print() {
-        if (planned_time)      println("time:  %02d:%02d Uhr", planned_time.hour, planned_time.minute);
-        if (changed_time)      println("time (changed):  %02d:%02d Uhr", changed_time.hour, changed_time.minute);
+        if (planned_time && changed_time && (changed_time.compare(planned_time)!=0)) {
+               println("time: %02d:%02d Uhr (%+d)",
+                       planned_time.hour, planned_time.minute,
+                       (changed_time-planned_time).to_minutes());
+        }
+        else if (planned_time)
+            println("time: %02d:%02d Uhr", planned_time.hour, planned_time.minute);
+
         if (planned_path.data) println("path: %.50s%s", planned_path.data, strlen(planned_path.data) > 50 ? "..." : "");
         if (planned_platform)  println("platform: %s", planned_platform.data);
         if (messages.count) {
@@ -677,7 +853,7 @@ namespace db {
         trip_label.free();
 
         if (arrival_event)  arrival_event.free();
-        if (depature_event) depature_event.free();
+        if (departure_event) departure_event.free();
 
         if (messages.data) {
             for (Message m : messages) {
@@ -689,9 +865,9 @@ namespace db {
 
     void Timetable_Stop::print() {
         println("%s %s", trip_label.category.data,
-                (depature_event)
-                ? (depature_event.line.data
-                   ? depature_event.line.data
+                (departure_event)
+                ? (departure_event.line.data
+                   ? departure_event.line.data
                    : trip_label.train_number.data)
                 : (arrival_event.line.data
                    ? arrival_event.line.data
@@ -705,10 +881,10 @@ namespace db {
                     arrival_event.print();
             }
 
-            if (depature_event) {
+            if (departure_event) {
                 println("-> Abfahrt");
                 with_indentation(2)
-                    depature_event.print();
+                    departure_event.print();
             }
 
             if (messages.count) {
@@ -723,6 +899,19 @@ namespace db {
 
         println("");
     }
+
+    Time Timetable_Stop::get_relevant_time() const  {
+        // changed departure
+        // planned departure
+        // changed arrival
+        // planned arrival
+        if (departure_event && departure_event.changed_time) return departure_event.changed_time;
+        if (departure_event && departure_event.planned_time) return departure_event.planned_time;
+        if (arrival_event   && arrival_event.changed_time)   return arrival_event.changed_time;
+        if (arrival_event   && arrival_event.planned_time)   return arrival_event.planned_time;
+        return {};
+    };
+
 
     void Timetable::free() {
         station_name.free();
@@ -742,19 +931,17 @@ namespace db {
         }
     }
 
-    void Timetable::print() {
+    void Timetable::print(Time after) {
         println("Timetable:");
         println("  name: %s", station_name.data);
         println("  eva:  %s", station_eva_nr.data);
         println("  stops:");
 
         with_indentation(4) {
-            int c = 0;
             for (Timetable_Stop s : stops) {
-                s.print();
-                ++c;
-                if (c == 5)
-                    break;
+                if (s.get_relevant_time().compare(after) > 0) {
+                    s.print();
+                }
             }
         }
 

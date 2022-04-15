@@ -3,22 +3,24 @@
 #include "ftb/arraylist.hpp"
 #include "ftb/types.hpp"
 #include "ftb/hashmap.hpp"
+#include <cstddef>
+
+struct Empty {};
 
 template <typename type>
 struct Maybe : type {
     bool __exists;
-
+    
     void operator=(type v) {
         memcpy(this, &v, sizeof(type));
         __exists = true;
     }
 
-    operator bool() {
+    operator bool() const {
         return __exists;
     }
 };
 
-struct Empty {};
 
 #define DEFINE_BASIC_TYPE_MAYBE(type)           \
     template <>                                 \

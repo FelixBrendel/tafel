@@ -1,3 +1,4 @@
+#include "ftb/macros.hpp"
 #define FTB_PRINT_IMPL
 #define FTB_HASHMAP_IMPL
 
@@ -41,9 +42,19 @@ namespace xml {
         debug_break();
     }
 
+
+    u32 skip_tag(char* xml, void* _) {
+        return xml::parse_attributes(xml);
+    }
+
     void init() {
         pipes.init();
         parser_stack.init();
+
+        push_handler_to_parser_stack({
+            .key = "?xml",
+            .open_handler = skip_tag
+        });
     }
 
     void deinit() {
@@ -55,7 +66,7 @@ namespace xml {
         reader_functions[(u8)t] = fun;
     }
 
-    void push_handler_to_parser_stack(Parser_Stack_Entry e) {
+    void push_handler_to_parser_stack(Parser_Stack_Entry e) {;
         parser_stack.push(e);
     }
 
@@ -401,11 +412,18 @@ namespace xml {
                 break;
             }
 
-            if (*xml != '<') {
-                parser_error("expected start of tag: '%.20s' at position %d\n",
-                             xml, total_parsed);
-                return parsed;
+            while (*xml != '<') {
+                if (*xml == '"' || *xml == '\'')
+                    xml += eat_string(xml);
+
+                ++xml;
             }
+
+            // if (*xml != '<') {
+            //     parser_error("expected start of tag: '%.20s' at position %d\n",
+            //                  xml, total_parsed);
+            //     return parsed;
+            // }
 
             pipes.clear();
             ++xml; // overstep <

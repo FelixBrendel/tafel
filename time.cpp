@@ -41,12 +41,20 @@ Time to_Time(tm tm_type) {
     return result;
 }
 
-f32 to_seconds(Time_Diff diff) {
+f32 Time_Diff::to_seconds() {
     return
-        diff.seconds                +
-        diff.minutes * 60           +
-        diff.hours   * 60 * 60      +
-        diff.days    * 24 * 60 * 60;
+        seconds                +
+        minutes * 60           +
+        hours   * 60 * 60      +
+        days    * 24 * 60 * 60;
+}
+
+s32 Time_Diff::to_minutes() {
+    return
+        (seconds > 30 ? 1 : 0) +
+        minutes +
+        hours   * 60  +
+        days    * 24 * 60;
 }
 
 
@@ -68,7 +76,7 @@ Time_Diff Time::operator-(Time other) {
 }
 
 Time Time::operator+(Time_Diff delta) {
-    s32 delta_seconds = (s32)(to_seconds(delta)+0.5);
+    s32 delta_seconds = (s32)((delta.to_seconds())+0.5);
     time_t this_time_t = to_time_t(*this);
 
     time_t result_time_t = this_time_t + delta_seconds;
@@ -87,4 +95,26 @@ Time Time::now() {
 
 void Time::print() {
     println("Time: %02d.%02d.%d %02d:%02d:%02.0f", day, month, year, hour, minute, seconds);
+}
+
+s32 Time::compare(Time other) {
+    if (year   < other.year)  return -1;
+    if (year   > other.year)  return  1;
+
+    if (month  < other.month) return -1;
+    if (month  > other.month) return  1;
+
+    if (day    < other.day)   return -1;
+    if (day    > other.day)   return  1;
+
+    if (hour   < other.hour)  return -1;
+    if (hour   > other.hour)  return  1;
+
+    if (minute < other.minute)  return -1;
+    if (minute > other.minute)  return  1;
+
+    if (seconds < other.seconds)  return -1;
+    if (seconds > other.seconds)  return  1;
+
+    return 0;
 }
