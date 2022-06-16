@@ -1,3 +1,3 @@
-[submodule "ftb"]
-	path = ftb
-	url = https://github.com/felixbrendel/ftb
+[submodule "src/ftb"]
+	path = src/ftb
+	url = https://github.com/FelixBrendel/ftb.git
