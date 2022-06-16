@@ -2,6 +2,7 @@
 #include "ftb/arraylist.hpp"
 #include "ftb/macros.hpp"
 #include "ftb/print.hpp"
+#include "ftb/profiler.hpp"
 #include "ftb/types.hpp"
 #include "net.h"
 #include "time.hpp"
@@ -13,7 +14,8 @@ namespace db {
     const char* authorization_token = "Bearer 77782dd921d7957515e62515f683374d";
 
     enum struct Custom_XML_Data_Types : u8 {
-        Maybe_Time
+        Maybe_Time,
+        Path_List
     };
 
     u32 numerical_value(char c) {
@@ -41,6 +43,18 @@ namespace db {
         return length;
     }
 
+    u32 read_path_list(char* pos, void* vp_ss) {
+        String_Split* ss = (String_Split*)vp_ss;
+
+        String s;
+        u32 length = xml::read_string(pos, &s);
+        s = html_decode_string(s, true);
+
+        ss->init(s, '|');
+
+        return length;
+    }
+
     void init() {
         if (!net_init()) {
             printf("net init error.");
@@ -48,6 +62,7 @@ namespace db {
 
         xml::init();
         xml::register_custom_reader_function((xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, read_time);
+        xml::register_custom_reader_function((xml::Data_Type)Custom_XML_Data_Types::Path_List, read_path_list);
     }
 
     void deinit() {
@@ -135,21 +150,17 @@ namespace db {
         Maybe<Event>* event = (Maybe<Event>*)vp_event;
         event->__exists = true;
         event->messages.init();
-        defer {
-            if (event->planned_path.data)
-                event->planned_path = html_decode_string(event->planned_path, true);
-        };
 
-        create_pipe("ppth", xml::Data_Type::String,  &event->planned_path);
-        create_pipe("cpth", xml::Data_Type::String,  &event->changed_path);
+        create_pipe("ppth", (xml::Data_Type)Custom_XML_Data_Types::Path_List, &event->planned_path);
+        create_pipe("cpth", (xml::Data_Type)Custom_XML_Data_Types::Path_List, &event->changed_path);
         create_pipe("pp",   xml::Data_Type::String,  &event->planned_platform);
         create_pipe("cp",   xml::Data_Type::String,  &event->changed_platform);
-        create_pipe("pt",   (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time,  &event->planned_time);
-        create_pipe("ct",   (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time,  &event->changed_time);
+        create_pipe("pt",   (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, &event->planned_time);
+        create_pipe("ct",   (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, &event->changed_time);
         create_pipe("ps",   xml::Data_Type::String,  &event->planned_status);
         create_pipe("cs",   xml::Data_Type::String,  &event->changed_status);
         create_pipe("hi",   xml::Data_Type::Integer, &event->hidden);
-        create_pipe("clt",  (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time,  &event->cancellation_time);
+        create_pipe("clt",  (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, &event->cancellation_time);
         create_pipe("wings",xml::Data_Type::String,  &event->wings);
         create_pipe("tra",  xml::Data_Type::String,  &event->transition);
         create_pipe("pde",  xml::Data_Type::String,  &event->planned_distant_endpoint);
@@ -310,6 +321,8 @@ namespace db {
     }
 
     Station find_station(const char* station_name) {
+        profile_function;
+
         String url_encoded_station = url_encode_string(station_name);
         defer {
             free(url_encoded_station.data);
@@ -334,7 +347,14 @@ namespace db {
         };
 
         Response res = net_request(req);
-        // print_response(res);
+        print_response(res, 10000);
+        if (res.response_code != 200) {
+            println("sad response.");
+            with_indentation(4) {
+                print_response(res, 10000);
+            }
+            return {};
+        }
 
         defer {
             res.free();
@@ -414,6 +434,7 @@ namespace db {
     }
 
     Timetable get_recent_changes(const char* eva_nr) {
+        profile_function;
         String_Builder sb = String_Builder::create_from({
             "https://api.deutschebahn.com/timetables/v1/rchg/",
             eva_nr,
@@ -423,7 +444,7 @@ namespace db {
     }
 
     Timetable get_full_changes(const char* eva_nr) {
-        log_trace();
+        profile_function;
         String_Builder sb = String_Builder::create_from({
             "https://api.deutschebahn.com/timetables/v1/fchg/",
             eva_nr,
@@ -433,7 +454,7 @@ namespace db {
     }
 
     Timetable get_timetable_one_hour(const char* eva_nr, Time time) {
-        log_trace();
+        profile_function;
         char date_str[10];
         char hour_str[10];
 
@@ -450,7 +471,8 @@ namespace db {
     }
 
     Timetable get_timetable(const char* eva_nr, Time time, u32 num_hours) {
-        log_trace();
+        profile_function;
+
         if (num_hours == 0)
             return {};
 
@@ -635,8 +657,8 @@ namespace db {
     }
 
     void Event::update(Event* other) {
-        maybe_take_maybe_free(planned_path);
-        maybe_take_maybe_free(changed_path);
+        maybe_take_maybe_free(planned_path.string);
+        maybe_take_maybe_free(changed_path.string);
         maybe_take_maybe_free(planned_platform);
         maybe_take_maybe_free(changed_platform);
         maybe_take(planned_time);
@@ -805,8 +827,10 @@ namespace db {
     }
 
     void Event::free() {
-        planned_path.free();
-        changed_path.free();
+        planned_path.splits.deinit();
+        planned_path.string.free();
+        changed_path.splits.deinit();
+        changed_path.string.free();
         planned_platform.free();
         changed_platform.free();
         planned_status.free();
@@ -825,7 +849,7 @@ namespace db {
         }
     }
 
-    void Event::print() {
+    void Event::print(bool is_arrival) {
         if (planned_time && changed_time && (changed_time.compare(planned_time)!=0)) {
                println("time: %02d:%02d Uhr (%+d)",
                        planned_time.hour, planned_time.minute,
@@ -834,7 +858,27 @@ namespace db {
         else if (planned_time)
             println("time: %02d:%02d Uhr", planned_time.hour, planned_time.minute);
 
-        if (planned_path.data) println("path: %.50s%s", planned_path.data, strlen(planned_path.data) > 50 ? "..." : "");
+
+        if (is_arrival) {
+            if (planned_path) {
+                String origin = planned_path[0];
+                println("planned origin: %{->Str}", &origin);
+            }
+            if (changed_path) {
+                String origin = changed_path[0];
+                println("changed origin: %{->Str}", &origin);
+            }
+        } else {
+            if (planned_path) {
+                String dest = planned_path[planned_path.num_splits()-1];
+                println("planned dest: %{->Str}", &dest);
+            }
+            if (changed_path) {
+                String dest = changed_path[changed_path.num_splits()-1];
+                println("changed dest: %{->Str}", &dest);
+            }
+        }
+
         if (planned_platform)  println("platform: %s", planned_platform.data);
         if (messages.count) {
             println("Event Messages:");
@@ -878,13 +922,13 @@ namespace db {
             if (arrival_event) {
                 println("<- Ankunft");
                 with_indentation(2)
-                    arrival_event.print();
+                    arrival_event.print(true);
             }
 
             if (departure_event) {
                 println("-> Abfahrt");
                 with_indentation(2)
-                    departure_event.print();
+                    departure_event.print(false);
             }
 
             if (messages.count) {

@@ -1,3 +1,4 @@
 /tafel
 tests/tests
 src/tests/tests
+src/displays/waveshare_2.9inch_epaper/bin/

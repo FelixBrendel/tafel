@@ -55,27 +55,27 @@ namespace db {
 
 
     struct Event {
-        String      planned_path;
-        String      changed_path;
-        String      planned_platform;
-        String      changed_platform;
-        Maybe<Time> planned_time;
-        Maybe<Time> changed_time;
-        String      planned_status;
-        String      changed_status;
-        s32         hidden;
-        Maybe<Time> cancellation_time;
-        String      wings;
-        String      transition;
-        String      planned_distant_endpoint;
-        String      changed_distant_endpoint;
-        s32         distance_change;
-        String      line;
+        String_Split planned_path;
+        String_Split changed_path;
+        String       planned_platform;
+        String       changed_platform;
+        Maybe<Time>  planned_time;
+        Maybe<Time>  changed_time;
+        String       planned_status;
+        String       changed_status;
+        s32          hidden;
+        Maybe<Time>  cancellation_time;
+        String       wings;
+        String       transition;
+        String       planned_distant_endpoint;
+        String       changed_distant_endpoint;
+        s32          distance_change;
+        String       line;
         Message_List messages;
 
         void update(Event* other);
         void free();
-        void print();
+        void print(bool is_arrival);
     };
 
     struct Timetable_Stop {

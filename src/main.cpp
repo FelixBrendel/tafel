@@ -1,16 +1,19 @@
+#include <cstdio>
+#define FTB_PROFILER_IMPL
 #include "db.hpp"
+#include "ftb/arraylist.hpp"
 #include "ftb/macros.hpp"
+#include "ftb/profiler.hpp"
 #include "ftb/print.hpp"
 #include "net.h"
 #include "time.hpp"
 #include "utf-8.hpp"
 #include "xml.hpp"
+#include "displays/display.h"
 
 int main() {
     db::init();
-    defer {
-        db::deinit();
-    };
+    defer { db::deinit(); };
 
     // NOTE(Felix): another way to search for stations (no eva_nr though)
     // https://www.img-bahn.de/bin/ajax-getstop.exe?S=Garching%20fors
@@ -110,7 +113,8 @@ int main() {
     Time now = Time::now();
     db::Station station = db::find_station("Petershausen");
     println("Found %s", station.eva_nr);
-    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 3);
+
+    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 5);
 
     defer {
         station.free();
@@ -119,6 +123,60 @@ int main() {
 
     station.print();
     timetable.print(now);
+
+    {
+        Simple_Timetable stt {};
+        Array_List<Simple_Timetable_Entry> entries;
+        entries.init();
+        defer { entries.deinit(); };
+
+        for (db::Timetable_Stop s : timetable.stops) {
+            // NOTE(Felix): only show departures
+            if (!s.departure_event)
+                continue;
+
+            db::Event& ev = s.departure_event;
+
+            if (s.get_relevant_time().compare(now) >= 0) {
+                Simple_Timetable_Entry entry {};
+                entry.planned_time = (ev.planned_time - now).to_minutes();
+                if (ev.changed_time) {
+                    entry.time_delta = (ev.changed_time - ev.planned_time).to_minutes();
+                }
+
+                if (ev.changed_path) {
+                    entry.destination = ev.changed_path[ev.changed_path.num_splits()-1].data;
+                } else if (ev.planned_path) {
+                    entry.destination = ev.planned_path[ev.planned_path.num_splits()-1].data;
+                } else {
+                    entry.destination = "???";
+                }
+
+                if (ev.changed_platform) {
+                    entry.track = ev.changed_platform.data;
+                } else if (ev.planned_platform) {
+                    entry.track = ev.planned_platform.data;
+                } else {
+                    entry.track = "???";
+                }
+
+                char* line = (char*)malloc(12*sizeof(char));
+                snprintf(line, 12, "%s %s",
+                         s.trip_label.category.data,
+                         (ev.line.data ? ev.line.data : s.trip_label.train_number.data));
+
+                entry.line = line;
+                entry.message = "";
+
+                entries.append(entry);
+            }
+        }
+
+        init_display();
+        display_timetable({entries.data, entries.count, ""}, GERMAN, MEDIUM);
+        // TODO(Felix): free the line strings
+        deinit_display();
+    }
 
 
     return 0;
