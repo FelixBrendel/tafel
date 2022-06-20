@@ -4,12 +4,25 @@ TIMEFORMAT=%3lR
 SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 pushd $SCRIPTPATH > /dev/null
 
-bash src/displays/waveshare_2.9inch_epaper/build.sh 
+src="src/*.cpp"
+opt="-g -o tafel -lcurl"
 
-time clang++ -g -o tafel src/*.cpp src/displays/waveshare_2.9inch_epaper/bin/*.o -lbcm2835 -lm  -lcurl || exit 1
+if [ $HOSTNAME != rapi ]
+then
+    echo "Not running on raspberry"
+else
+    echo "Running on raspberry"
+    bash src/displays/waveshare_2.9inch_epaper/build.sh
+    src="$src src/displays/waveshare_2.9inch_epaper/bin/*.o"
+    opt="$opt -D ON_RASPBERRY -lbcm2835 -lm"
+fi
 
-# time valgrind --leak-check=full ./tafel
-time ./tafel
+time clang++ $src $opt || exit 1
+
+if [ $HOSTNAME != rapi ]
+then
+    time ./tafel
+fi
 
 popd > /dev/null
 unset TIMEFORMAT

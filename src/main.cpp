@@ -1,4 +1,6 @@
-#include <cstdio>
+#include <cstring>
+#include <stdio.h>
+#include <errno.h>
 #define FTB_PROFILER_IMPL
 #include "db.hpp"
 #include "ftb/arraylist.hpp"
@@ -11,7 +13,147 @@
 #include "xml.hpp"
 #include "displays/display.h"
 
-int main() {
+int sleep_in_sec(u64 sec) {
+    // source: https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
+    int res;
+    timespec ts { .tv_sec = (long)sec };
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}
+
+void maybe_update_software() {
+    profile_function;
+    log_trace();
+
+    log_info("running git fetch");
+    if (system("git fetch")) {
+        println("git fetch returned non zero");
+        return;
+    }
+
+    char local_hash[40];
+    char upstream_hash[40];
+
+    {
+        log_info("getting local commit hash");
+        FILE* get_local = popen("git rev-parse HEAD", "r");
+        if (fread(local_hash, sizeof(local_hash), 1, get_local) != 1) {
+            log_error("local commit could not be read");
+            return;
+        }
+
+        if (pclose(get_local) != 0) {
+            log_error("reading local commit hash caused an error.");
+            return;
+        }
+    }
+
+    {
+        log_info("getting upsream commit hash");
+        FILE* get_upstream = popen("git rev-parse \"@{u}\"", "r");
+        if (fread(upstream_hash, sizeof(upstream_hash), 1, get_upstream) != 1) {
+            log_error("local commit could not be read");
+            return;
+        }
+
+        if (pclose(get_upstream) != 0) {
+            log_error("reading local commit hash caused an error.");
+            return;
+        }
+    }
+
+    log_info("local_hash:    %.*s", sizeof(local_hash), local_hash);
+    log_info("upstream_hash: %.*s", sizeof(upstream_hash), upstream_hash);
+
+    if (strncmp(local_hash, upstream_hash, sizeof(local_hash)) == 0) {
+        log_info("-> hashes are equal, no action required");
+    } else {
+        log_info("-> hashes are not equal, updating...");
+
+        log_info("resetting");
+        if (system("git reset --hard")) {
+            log_error("git reset --hard returned non zero");
+            return;
+        }
+
+        log_info("pulling");
+        if (system("git pull")) {
+            log_error("git pull returned non zero");
+            return;
+        }
+
+        char commit_msg_str[120];
+        memset(commit_msg_str, 0, sizeof(commit_msg_str));
+
+        {
+            log_info("Reading commit msg");
+            FILE* commit_msg = popen("git show -s --format=%s", "r");
+            fread(commit_msg_str, 1, sizeof(commit_msg_str), commit_msg);
+            pclose(commit_msg);
+
+            char* c = commit_msg_str;
+            while (*c) {
+                if (*c == '\n' || *c == '\r' || *c == '\t')
+                    *c = ' ';
+                ++c;
+            }
+
+            log_info("-> %s", commit_msg_str);
+        }
+
+
+#if ON_RASPBERRY
+        char display_string[200];
+        memset(display_string, 0, sizeof(display_string));
+        snprintf(display_string, sizeof(display_string), "Update: %s", commit_msg_str);
+        log_info("display: '%s' with len: %llu",display_string, strlen(display_string));
+        display_message(display_string);
+#endif
+
+        {
+            log_info("compiling:");
+            FILE* compiling = popen("./build.sh", "r");
+            if (!compiling) {
+                log_error("build script not found");
+                return;
+            }
+
+            int i = 0;
+            int ch;
+            while((ch=fgetc(compiling)) != EOF) {
+                putchar((char)ch);
+                ++i;
+
+                if ((i & 32) != 0)
+                    fflush(stdout);
+            }
+
+            if (pclose(compiling) != 0) {
+                log_error("compilation process returned non zero");
+                return;
+            }
+        }
+
+        log_info("deinit display");
+
+#if ON_RASPBERRY
+        deinit_display();
+#endif
+
+        log_info("restarting");
+        const char * argv[] = {"./tafel", nullptr};
+        if (execv("./tafel", (char * const *)argv)) {
+            log_error("error restarting");
+            return;
+        }
+    }
+}
+
+int orig_main() {
     db::init();
     defer { db::deinit(); };
 
@@ -114,7 +256,7 @@ int main() {
     db::Station station = db::find_station("Petershausen");
     println("Found %s", station.eva_nr);
 
-    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 5);
+    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 7);
 
     defer {
         station.free();
@@ -172,12 +314,65 @@ int main() {
             }
         }
 
+#if ON_RASPBERRY
         init_display();
         display_timetable({entries.data, entries.count, ""}, GERMAN, MEDIUM);
         // TODO(Felix): free the line strings
-        deinit_display();
+
+        while(1) {
+            log_info("entering loop");
+
+            sleep_in_sec(10);
+            maybe_update_software();
+        }
+#endif
+
     }
 
+    return 0;
+}
 
+
+int main() {
+
+#if ON_RASPBERRY
+    Array_List<Simple_Timetable_Entry> entries;
+    entries.init();
+    defer { entries.deinit(); };
+
+    {
+
+        Simple_Timetable_Entry entry {};
+        entry.planned_time = -10;
+        entry.time_delta   = +13;
+        entry.destination = "dest";
+        entry.track = "3";
+
+        char* line = (char*)malloc(12*sizeof(char));
+        snprintf(line, 12, "%s %s",
+                 "S", "2");
+
+        entry.line = line;
+        entry.message = "";
+
+        entries.append(entry);
+    }
+
+    init_display();
+    display_timetable({entries.data, entries.count, ""}, GERMAN, MEDIUM);
+    // TODO(Felix): free the line strings
+
+    char display_string[200];
+    memset(display_string, 0, sizeof(display_string));
+    snprintf(display_string, sizeof(display_string), "Update: %s", "please wo??");
+    display_message(display_string);
+
+    while(1) {
+        log_info("entering loop");
+
+        sleep_in_sec(10);
+        maybe_update_software();
+    }
+#endif
     return 0;
 }

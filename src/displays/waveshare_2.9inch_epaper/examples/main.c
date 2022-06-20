@@ -235,6 +235,17 @@ void deinit_display() {
     DEV_Module_Exit();
 }
 
+void display_message(const char* message) {
+    Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
+    Paint_SelectImage(BlackImage);
+    Paint_Clear(WHITE);
+
+    Paint_DrawString_EN(5, 50, message, &Font12, WHITE, BLACK);
+
+    EPD_2IN9_V2_Display_Base(BlackImage);
+    DEV_Delay_ms(3000);
+}
+
 void display_timetable(Simple_Timetable timetable, Language lang, Font_Size gs) {
     Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
     printf("Drawing\r\n");
@@ -270,7 +281,14 @@ void display_timetable(Simple_Timetable timetable, Language lang, Font_Size gs) 
         Paint_DrawString_EN(x_base_lines[LINE],   y_base_line, timetable.entries[i].line,         &Font12, WHITE, BLACK);
         Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, timetable.entries[i].destination,  &Font12, WHITE, BLACK);
         Paint_DrawString_EN(x_base_lines[TRACK],  y_base_line, timetable.entries[i].track,        &Font12, WHITE, BLACK);
-        Paint_DrawNum(      x_base_lines[IN_MIN], y_base_line, timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
+
+        if(timetable.entries[i].planned_time < 0) {
+            Paint_DrawString_EN(x_base_lines[IN_MIN],   y_base_line, "-", &Font12, WHITE, BLACK);
+            Paint_DrawNum(      x_base_lines[IN_MIN]+7, y_base_line, -timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
+        } else {
+            Paint_DrawNum(      x_base_lines[IN_MIN],   y_base_line, timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
+        }
+
         if(timetable.entries[i].time_delta != 0) {
             Paint_DrawString_EN(x_base_lines[PLUS_MINUS], y_base_line, timetable.entries[i].time_delta > 0 ? "+" : "-", &Font12, WHITE, BLACK);
             Paint_DrawNum(      x_base_lines[DELAY],      y_base_line, abs(timetable.entries[i].time_delta),            &Font12, BLACK, WHITE);

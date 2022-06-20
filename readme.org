@@ -1,0 +1,9 @@
+
+
+- rapi name: "rapi"
+- as root necessary (because tafel needs to run as root): git config --global --add safe.directory <path>/tafel
+
+- autoupdate is run as root so maybe the premissions are messed up by the git commands it runs. to restore them run: sudo chown -R <actual>:wheel .
+
+
+manual full update: sudo chown -R felixb:wheel . && git pull && git reset --hard && ./build.sh && sudo ./tafel
