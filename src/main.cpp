@@ -153,7 +153,7 @@ void maybe_update_software() {
     }
 }
 
-int orig_main() {
+int main() {
     db::init();
     defer { db::deinit(); };
 
@@ -256,7 +256,7 @@ int orig_main() {
     db::Station station = db::find_station("Petershausen");
     println("Found %s", station.eva_nr);
 
-    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 7);
+    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 4);
 
     defer {
         station.free();
@@ -319,60 +319,15 @@ int orig_main() {
         display_timetable({entries.data, entries.count, ""}, GERMAN, MEDIUM);
         // TODO(Felix): free the line strings
 
+        log_info("entering update loop");
         while(1) {
-            log_info("entering loop");
-
-            sleep_in_sec(10);
             maybe_update_software();
+
+            sleep_in_sec(30);
         }
 #endif
 
     }
 
-    return 0;
-}
-
-
-int main() {
-
-#if ON_RASPBERRY
-    Array_List<Simple_Timetable_Entry> entries;
-    entries.init();
-    defer { entries.deinit(); };
-
-    {
-
-        Simple_Timetable_Entry entry {};
-        entry.planned_time = -10;
-        entry.time_delta   = +13;
-        entry.destination = "dest";
-        entry.track = "3";
-
-        char* line = (char*)malloc(12*sizeof(char));
-        snprintf(line, 12, "%s %s",
-                 "S", "2");
-
-        entry.line = line;
-        entry.message = "";
-
-        entries.append(entry);
-    }
-
-    init_display();
-    display_timetable({entries.data, entries.count, ""}, GERMAN, MEDIUM);
-    // TODO(Felix): free the line strings
-
-    char display_string[200];
-    memset(display_string, 0, sizeof(display_string));
-    snprintf(display_string, sizeof(display_string), "Update: %s", "please wo??");
-    display_message(display_string);
-
-    while(1) {
-        log_info("entering loop");
-
-        sleep_in_sec(10);
-        maybe_update_software();
-    }
-#endif
     return 0;
 }

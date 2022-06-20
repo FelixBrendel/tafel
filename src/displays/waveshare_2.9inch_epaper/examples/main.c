@@ -276,7 +276,6 @@ void display_timetable(Simple_Timetable timetable, Language lang, Font_Size gs) 
     Paint_DrawLine(1, y_base_line, EPD_2IN9_V2_HEIGHT, 18, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
     y_base_line += 4;
 
-
     for(unsigned i = 0; i < timetable.num_entries && i < 6; i++) {
         Paint_DrawString_EN(x_base_lines[LINE],   y_base_line, timetable.entries[i].line,         &Font12, WHITE, BLACK);
         Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, timetable.entries[i].destination,  &Font12, WHITE, BLACK);

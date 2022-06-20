@@ -42,17 +42,17 @@ RPI:RPI_DEV RPI_epd
 JETSON: JETSON_DEV JETSON_epd
 
 TARGET = epd
-CC = gcc
+CC = g++
 MSG = -g -O -ffunction-sections -fdata-sections -Wall
 CFLAGS += $(MSG)
 
 RPI_epd:${OBJ_O}
 	echo $(@)
-	$(CC) $(CFLAGS) -D RPI $(OBJ_O) $(RPI_DEV_C) -o $(TARGET) $(LIB_RPI) $(DEBUG)
+# $(CC) $(CFLAGS) -D RPI $(OBJ_O) $(RPI_DEV_C) -o $(TARGET) $(LIB_RPI) $(DEBUG)
 
 JETSON_epd:${OBJ_O}
 	echo $(@)
-	$(CC) $(CFLAGS) $(OBJ_O) $(JETSON_DEV_C) -o $(TARGET) $(LIB_JETSONI) $(DEBUG)
+# $(CC) $(CFLAGS) $(OBJ_O) $(JETSON_DEV_C) -o $(TARGET) $(LIB_JETSONI) $(DEBUG)
 
 $(shell mkdir -p $(DIR_BIN))
 
