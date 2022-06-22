@@ -40,3 +40,12 @@ int init_display();
 void deinit_display();
 void display_timetable(Simple_Timetable, Language, Font_Size);
 void display_message(const char*);
+
+// NOTE(Felix): if we include this file when ON_RASPBERRY is not defined then
+//   these functions are just stubbed out
+#ifndef ON_RASPBERRY
+#  define init_display()
+#  define deinit_display()
+#  define display_timetable(...)
+#  define display_message(...)
+#endif

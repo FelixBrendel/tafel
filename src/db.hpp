@@ -111,7 +111,7 @@ namespace db {
         void print(Time after = {});
     };
 
-    void init();
+    void init(const char* auth_token);
     void deinit();
 
     Station find_station(const char* name);

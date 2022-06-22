@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <cstring>
 #include <stdio.h>
 #include <errno.h>
@@ -12,6 +13,7 @@
 #include "utf-8.hpp"
 #include "xml.hpp"
 #include "displays/display.h"
+
 
 int sleep_in_sec(u64 sec) {
     // source: https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
@@ -139,10 +141,7 @@ void maybe_update_software() {
         }
 
         log_info("deinit display");
-
-#if ON_RASPBERRY
         deinit_display();
-#endif
 
         log_info("restarting");
         const char * argv[] = {"./tafel", nullptr};
@@ -154,103 +153,25 @@ void maybe_update_software() {
 }
 
 int main() {
-    db::init();
+    init_display();
+    defer { deinit_display(); };
+
+    char db_auth_token[64];
+    memset(db_auth_token, 0 , sizeof(db_auth_token));
+    {
+        char* env_auth_token = getenv("DB_AUTH_TOKEN");
+        if (!env_auth_token) {
+            log_error("Environment variable DB_AUTH_TOKEN is not set");
+            return 1;
+        } else {
+            log_info("Got db token: %s.", env_auth_token);
+        }
+        strncpy(db_auth_token, env_auth_token, sizeof(db_auth_token)-1);
+        db_auth_token[sizeof(db_auth_token)-1] = '\n';
+    }
+
+    db::init(db_auth_token);
     defer { db::deinit(); };
-
-    // NOTE(Felix): another way to search for stations (no eva_nr though)
-    // https://www.img-bahn.de/bin/ajax-getstop.exe?S=Garching%20fors
-    // or
-    // https://reiseauskunft.bahn.de/bin/bhftafel.exe/
-
-    // NOTE(Felix): Actually for mvg:
-    //   (petershausen bhf ID = de:09174:6840)
-    //   (petershausen p+r ID = de:09174:7167)
-    // - For finding ID
-    //   - https://www.mvg.de/api/fahrinfo/location/queryWeb?q={string}
-    /*
-     * {
-     *    "locations": [
-     *      {
-     *        "type"         : "station",
-     *         "latitude"    : 48.4126,
-     *         "longitude"   : 11.46992,
-     *         "id"          : "de:09174:6840",
-     *         "divaId"      : 6840,
-     *         "place"       : "Petershausen",
-     *         "name"        : "Petershausen",
-     *         "hasLiveData" : false,
-     *         "hasZoomData" : false,
-     *         "products"    : [ "BAHN", "SBAHN", "BUS" ],
-     *         "aliases"     : "Bahnhof Bf. DAH MMPE",
-     *         "tariffZones" : "4|5",
-     *         "lines" : {
-     *           "tram"       : [ ],
-     *           "nachttram"  : [ ],
-     *           "sbahn"      : [ ],
-     *           "ubahn"      : [ ],
-     *           "bus"        : [ ],
-     *           "nachtbus"   : [ ],
-     *           "otherlines" : [ ]
-     *      }
-     *    ]
-     * }
-     * */
-    // NOTE(Felix): For departure (flavour 1)
-    // - https://www.mvg.de/api/fahrinfo/departure/{ID}?footway=0
-    /*
-     * {
-     *   "servingLines" : [
-     *     {
-     *       "destination" : "Erding",
-     *       "sev"         : false,
-     *       "network"     : "ddb",
-     *       "product"     : "SBAHN",
-     *       "lineNumber"  : "S2",
-     *       "divaId"      : "92M02"
-     *     }
-     *   ],
-     *   "departures" : [
-     *     {
-     *        "departureTime"       : 1650657120000,
-     *        "product"             : "SBAHN",
-     *        "label"               : "S2",
-     *        "destination"         : "Markt Schwaben",
-     *        "live"                : false,
-     *        "delay"               : 0,
-     *        "cancelled"           : false,
-     *        "platform"            : "5",
-     *        "sev"                 : false,
-     *        "lineBackgroundColor" : "#9bc04c",
-     *        "departureId"         : "f4f0d89b56de31aae8c117b483546cf4#1650657120000#de:09174:6840",
-     *        "stopPositionNumber"  : 0,
-     *        "infoMessages"        : [ "..." ],
-     *        "bannerHash"          : "65c28a6eec770977418d0c5a13c1bab7"
-     *      },
-     *   ]
-     * }
-     * */
-    // NOTE(Felix): For departure (flavour 2)
-    // - https://www.mvg.de/api/fahrinfong/departure?stationGlobalId={ID}
-    /*
-     * [
-     *    {
-     *      "plannedDepartureTime" : 1650657120000,
-     *      "transportType"        : "SBAHN",
-     *      "label"                : "S2",
-     *      "destination"          : "Markt Schwaben",
-     *      "realtime"             : true,
-     *      "delayInMinutes"       : 0,
-     *      "cancelled"            : false,
-     *      "platform"             : 5,
-     *      "sev"                  : false,
-     *      "network"              : "ddb",
-     *      "trainType"            : "",
-     *      "messages"             : [],
-     *      "bannerHash"           : "65c28a6eec770977418d0c5a13c1bab7",
-     *      "occupancy"            : "UNKNOWN"
-     *    },
-     * ]
-     * */
 
     Time now = Time::now();
     db::Station station = db::find_station("Petershausen");
@@ -314,7 +235,6 @@ int main() {
             }
         }
 
-#if ON_RASPBERRY
         init_display();
         display_timetable({entries.data, entries.count, ""}, GERMAN, MEDIUM);
         // TODO(Felix): free the line strings
@@ -325,9 +245,104 @@ int main() {
 
             sleep_in_sec(30);
         }
-#endif
 
     }
 
     return 0;
 }
+
+
+// NOTE(Felix): another way to search for stations (no eva_nr though)
+// https://www.img-bahn.de/bin/ajax-getstop.exe?S=Garching%20fors
+// or
+// https://reiseauskunft.bahn.de/bin/bhftafel.exe/
+
+// NOTE(Felix): Actually for mvg:
+//   (petershausen bhf ID = de:09174:6840)
+//   (petershausen p+r ID = de:09174:7167)
+// - For finding ID
+//   - https://www.mvg.de/api/fahrinfo/location/queryWeb?q={string}
+/*
+ * {
+ *    "locations": [
+ *      {
+ *        "type"         : "station",
+ *         "latitude"    : 48.4126,
+ *         "longitude"   : 11.46992,
+ *         "id"          : "de:09174:6840",
+ *         "divaId"      : 6840,
+ *         "place"       : "Petershausen",
+ *         "name"        : "Petershausen",
+ *         "hasLiveData" : false,
+ *         "hasZoomData" : false,
+ *         "products"    : [ "BAHN", "SBAHN", "BUS" ],
+ *         "aliases"     : "Bahnhof Bf. DAH MMPE",
+ *         "tariffZones" : "4|5",
+ *         "lines" : {
+ *           "tram"       : [ ],
+ *           "nachttram"  : [ ],
+ *           "sbahn"      : [ ],
+ *           "ubahn"      : [ ],
+ *           "bus"        : [ ],
+ *           "nachtbus"   : [ ],
+ *           "otherlines" : [ ]
+ *      }
+ *    ]
+ * }
+ * */
+// NOTE(Felix): For departure (flavour 1)
+// - https://www.mvg.de/api/fahrinfo/departure/{ID}?footway=0
+/*
+ * {
+ *   "servingLines" : [
+ *     {
+ *       "destination" : "Erding",
+ *       "sev"         : false,
+ *       "network"     : "ddb",
+ *       "product"     : "SBAHN",
+ *       "lineNumber"  : "S2",
+ *       "divaId"      : "92M02"
+ *     }
+ *   ],
+ *   "departures" : [
+ *     {
+ *        "departureTime"       : 1650657120000,
+ *        "product"             : "SBAHN",
+ *        "label"               : "S2",
+ *        "destination"         : "Markt Schwaben",
+ *        "live"                : false,
+ *        "delay"               : 0,
+ *        "cancelled"           : false,
+ *        "platform"            : "5",
+ *        "sev"                 : false,
+ *        "lineBackgroundColor" : "#9bc04c",
+ *        "departureId"         : "f4f0d89b56de31aae8c117b483546cf4#1650657120000#de:09174:6840",
+ *        "stopPositionNumber"  : 0,
+ *        "infoMessages"        : [ "..." ],
+ *        "bannerHash"          : "65c28a6eec770977418d0c5a13c1bab7"
+ *      },
+ *   ]
+ * }
+ * */
+// NOTE(Felix): For departure (flavour 2)
+// - https://www.mvg.de/api/fahrinfong/departure?stationGlobalId={ID}
+/*
+ * [
+ *    {
+ *      "plannedDepartureTime" : 1650657120000,
+ *      "transportType"        : "SBAHN",
+ *      "label"                : "S2",
+ *      "destination"          : "Markt Schwaben",
+ *      "realtime"             : true,
+ *      "delayInMinutes"       : 0,
+ *      "cancelled"            : false,
+ *      "platform"             : 5,
+ *      "sev"                  : false,
+ *      "network"              : "ddb",
+ *      "trainType"            : "",
+ *      "messages"             : [],
+ *      "bannerHash"           : "65c28a6eec770977418d0c5a13c1bab7",
+ *      "occupancy"            : "UNKNOWN"
+ *    },
+ * ]
+ * */

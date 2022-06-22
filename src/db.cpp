@@ -11,7 +11,7 @@
 #include <cstring>
 
 namespace db {
-    const char* authorization_token = "Bearer 77782dd921d7957515e62515f683374d";
+    const char* authorization_token;
 
     enum struct Custom_XML_Data_Types : u8 {
         Maybe_Time,
@@ -55,7 +55,7 @@ namespace db {
         return length;
     }
 
-    void init() {
+    void init(const char* auth_token) {
         if (!net_init()) {
             printf("net init error.");
         }
@@ -63,6 +63,7 @@ namespace db {
         xml::init();
         xml::register_custom_reader_function((xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, read_time);
         xml::register_custom_reader_function((xml::Data_Type)Custom_XML_Data_Types::Path_List, read_path_list);
+        authorization_token = auth_token;
     }
 
     void deinit() {
