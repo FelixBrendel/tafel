@@ -38,6 +38,7 @@ typedef enum {
 
 int init_display();
 void deinit_display();
+
 void display_timetable(Simple_Timetable, Language, Font_Size);
 void display_message(const char*);
 

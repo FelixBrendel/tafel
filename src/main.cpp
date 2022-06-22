@@ -156,6 +156,8 @@ int main() {
     init_display();
     defer { deinit_display(); };
 
+    display_message("Loading");
+
     char db_auth_token[64];
     memset(db_auth_token, 0 , sizeof(db_auth_token));
     {
@@ -177,7 +179,7 @@ int main() {
     db::Station station = db::find_station("Petershausen");
     println("Found %s", station.eva_nr);
 
-    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 4);
+    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 5);
 
     defer {
         station.free();
@@ -235,7 +237,6 @@ int main() {
             }
         }
 
-        init_display();
         display_timetable({entries.data, entries.count, ""}, GERMAN, MEDIUM);
         // TODO(Felix): free the line strings
 

@@ -43,7 +43,7 @@ JETSON: JETSON_DEV JETSON_epd
 
 TARGET = epd
 CC = g++
-MSG = -g -O -ffunction-sections -fdata-sections -Wall
+MSG = -g -O -ffunction-sections -fdata-sections -Wall -D ON_RASPBERRY
 CFLAGS += $(MSG)
 
 RPI_epd:${OBJ_O}

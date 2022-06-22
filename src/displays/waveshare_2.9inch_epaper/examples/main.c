@@ -44,15 +44,17 @@ void  Handler(int signo) {
     exit(0);
 }
 
+UBYTE *BlackImage;
+
 int demo() {
     {
-        printf("EPD_2IN9_V2_test Demo\r\n");
-        if(DEV_Module_Init()!=0){
-            return -1;
-        }
+        /* printf("EPD_2IN9_V2_test Demo\r\n"); */
+        /* if(DEV_Module_Init()!=0){ */
+        /*     return -1; */
+        /* } */
 
-        printf("e-Paper Init and Clear...\r\n");
-        EPD_2IN9_V2_Init();
+        /* printf("e-Paper Init and Clear...\r\n"); */
+        /* EPD_2IN9_V2_Init(); */
 
         struct timespec start={0,0}, finish={0,0};
         clock_gettime(CLOCK_REALTIME,&start);
@@ -61,17 +63,17 @@ int demo() {
         printf("%ld S\r\n",finish.tv_sec-start.tv_sec);
 
         //Create a new image cache
-        UBYTE *BlackImage;
-        UWORD Imagesize = ((EPD_2IN9_V2_WIDTH % 8 == 0)? (EPD_2IN9_V2_WIDTH / 8 ): (EPD_2IN9_V2_WIDTH / 8 + 1)) * EPD_2IN9_V2_HEIGHT;
-        if((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) {
-            printf("Failed to apply for black memory...\r\n");
-            return -1;
-        }
+        /* UBYTE *BlackImage; */
+        /* UWORD Imagesize = ((EPD_2IN9_V2_WIDTH % 8 == 0)? (EPD_2IN9_V2_WIDTH / 8 ): (EPD_2IN9_V2_WIDTH / 8 + 1)) * EPD_2IN9_V2_HEIGHT; */
+        /* if((BlackImage = (UBYTE *)malloc(Imagesize)) == NULL) { */
+            /* printf("Failed to apply for black memory...\r\n"); */
+            /* return -1; */
+        /* } */
         printf("Paint_NewImage\r\n");
         Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
         Paint_Clear(WHITE);
 
-#if 1   // show bmp
+#if 0   // show bmp
         Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 0, WHITE);
         printf("show window BMP-----------------\r\n");
         Paint_SelectImage(BlackImage);
@@ -128,8 +130,8 @@ int demo() {
         Paint_DrawNum(10, 33, 123456789, &Font12, BLACK, WHITE);
         Paint_DrawNum(10, 50, 987654321, &Font16, WHITE, BLACK);
 
-        Paint_DrawString_CN(130, 0,"你好abc", &Font12CN, BLACK, WHITE);
-        Paint_DrawString_CN(130, 20, "微雪电子", &Font24CN, WHITE, BLACK);
+        /* Paint_DrawString_CN(130, 0,"你好abc", &Font12CN, BLACK, WHITE); */
+        /* Paint_DrawString_CN(130, 20, "微雪电子", &Font24CN, WHITE, BLACK); */
 
         EPD_2IN9_V2_Display_Base(BlackImage);
         DEV_Delay_ms(3000);
@@ -174,38 +176,23 @@ int demo() {
 #endif
 
         printf("Clear...\r\n");
-        EPD_2IN9_V2_Init();
-        EPD_2IN9_V2_Clear();
+        /* EPD_2IN9_V2_Init(); */
+        /* EPD_2IN9_V2_Clear(); */
 
         printf("Goto Sleep...\r\n");
         EPD_2IN9_V2_Sleep();
-        free(BlackImage);
-        BlackImage = NULL;
+        /* free(BlackImage); */
+        /* BlackImage = NULL; */
         DEV_Delay_ms(2000);//important, at least 2s
         // close 5V
-        printf("close 5V, Module enters 0 power consumption ...\r\n");
-        DEV_Module_Exit();
+        /* printf("close 5V, Module enters 0 power consumption ...\r\n"); */
+        /* DEV_Module_Exit(); */
         return 0;
     }
 }
 
-UBYTE *BlackImage;
-
 int init_display () {
     printf("EPD_2IN9_V2_test Demo\r\n");
-    if(DEV_Module_Init()!=0){
-        return -1;
-    }
-
-    printf("e-Paper Init and Clear...\r\n");
-    EPD_2IN9_V2_Init();
-
-    struct timespec start={0,0}, finish={0,0};
-    clock_gettime(CLOCK_REALTIME,&start);
-    EPD_2IN9_V2_Clear();
-    clock_gettime(CLOCK_REALTIME,&finish);
-    printf("%ld S\r\n",finish.tv_sec-start.tv_sec);
-
     //Create a new image cache
 
     UWORD Imagesize = ((EPD_2IN9_V2_WIDTH % 8 == 0)? (EPD_2IN9_V2_WIDTH / 8 ): (EPD_2IN9_V2_WIDTH / 8 + 1)) * EPD_2IN9_V2_HEIGHT;
@@ -225,79 +212,106 @@ void deinit_display() {
     /* EPD_2IN9_V2_Init(); */
     /* EPD_2IN9_V2_Clear(); */
 
-    printf("Goto Sleep...\r\n");
-    EPD_2IN9_V2_Sleep();
     free(BlackImage);
     BlackImage = NULL;
+}
+
+/* void display_utf8_string(UWORD x, UWORD y, const char* string, UTF8_Font* font, UWORD foreground, UWORD background) { */
+
+/* } */
+
+
+void display_sleep() {
+    printf("Goto Sleep...\r\n");
+    EPD_2IN9_V2_Sleep();
     DEV_Delay_ms(2000);//important, at least 2s
     // close 5V
     printf("close 5V, Module enters 0 power consumption ...\r\n");
     DEV_Module_Exit();
 }
 
+int display_wake_up() {
+    if(DEV_Module_Init()!=0){
+        return -1;
+    }
+
+    printf("e-Paper Init and Clear...\r\n");
+    EPD_2IN9_V2_Init();
+
+    return 0;
+}
+
 void display_message(const char* message) {
-    Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
-    Paint_SelectImage(BlackImage);
-    Paint_Clear(WHITE);
+    display_wake_up();
+    {
+        Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
+        Paint_SelectImage(BlackImage);
+        Paint_Clear(WHITE);
 
-    Paint_DrawString_EN(5, 50, message, &Font12, WHITE, BLACK);
+        Paint_DrawString_EN(5, 50, message, &Font12, WHITE, BLACK);
+        // display_utf8_string(5, 50, message, &UTF8_Font12, WHITE, BLACK);
 
-    EPD_2IN9_V2_Display_Base(BlackImage);
-    DEV_Delay_ms(3000);
+        EPD_2IN9_V2_Display_Base(BlackImage);
+    }
+    display_sleep();
 }
 
 void display_timetable(Simple_Timetable timetable, Language lang, Font_Size gs) {
-    Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
-    printf("Drawing\r\n");
-    //1.Select Image
-    Paint_SelectImage(BlackImage);
-    Paint_Clear(WHITE);
+    display_wake_up();
+    {
 
-    printf("%d\n", EPD_2IN9_V2_HEIGHT);
-    /* Paint_DrawRectangle(1, 1, EPD_2IN9_V2_HEIGHT, 20, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY); */
+        Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
+        printf("Drawing\r\n");
+        //1.Select Image
+        Paint_SelectImage(BlackImage);
+        Paint_Clear(WHITE);
 
-    uint16_t y_base_line = 0;
-    uint16_t y_base_line_increment = 18;
-    uint16_t x_base_lines[] = {
-        [LINE]        = 5,
-        [DEST]        = 60,
-        [TRACK]       = 200,
-        [IN_MIN]      = 250,
-        [PLUS_MINUS]  = 275,
-        [DELAY]       = 282
-    };
+        printf("%d\n", EPD_2IN9_V2_HEIGHT);
+        /* Paint_DrawRectangle(1, 1, EPD_2IN9_V2_HEIGHT, 20, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY); */
 
-    Paint_DrawString_EN(x_base_lines[LINE],   y_base_line, headings[lang][LINE],   &Font12, WHITE, BLACK);
-    Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, headings[lang][DEST],   &Font12, WHITE, BLACK);
-    Paint_DrawString_EN(x_base_lines[TRACK],  y_base_line, headings[lang][TRACK],  &Font12, WHITE, BLACK);
-    Paint_DrawString_EN(x_base_lines[IN_MIN], y_base_line, headings[lang][IN_MIN], &Font12, WHITE, BLACK);
-    y_base_line += y_base_line_increment;
+        uint16_t y_base_line = 0;
+        uint16_t y_base_line_increment = 18;
+        uint16_t x_base_lines[] = {
+            [LINE]        = 5,
+            [DEST]        = 60,
+            [TRACK]       = 200,
+            [IN_MIN]      = 250,
+            [PLUS_MINUS]  = 275,
+            [DELAY]       = 282
+        };
 
-    Paint_DrawLine(1, y_base_line, EPD_2IN9_V2_HEIGHT, 18, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
-    y_base_line += 4;
-
-    for(unsigned i = 0; i < timetable.num_entries && i < 6; i++) {
-        Paint_DrawString_EN(x_base_lines[LINE],   y_base_line, timetable.entries[i].line,         &Font12, WHITE, BLACK);
-        Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, timetable.entries[i].destination,  &Font12, WHITE, BLACK);
-        Paint_DrawString_EN(x_base_lines[TRACK],  y_base_line, timetable.entries[i].track,        &Font12, WHITE, BLACK);
-
-        if(timetable.entries[i].planned_time < 0) {
-            Paint_DrawString_EN(x_base_lines[IN_MIN],   y_base_line, "-", &Font12, WHITE, BLACK);
-            Paint_DrawNum(      x_base_lines[IN_MIN]+7, y_base_line, -timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
-        } else {
-            Paint_DrawNum(      x_base_lines[IN_MIN],   y_base_line, timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
-        }
-
-        if(timetable.entries[i].time_delta != 0) {
-            Paint_DrawString_EN(x_base_lines[PLUS_MINUS], y_base_line, timetable.entries[i].time_delta > 0 ? "+" : "-", &Font12, WHITE, BLACK);
-            Paint_DrawNum(      x_base_lines[DELAY],      y_base_line, abs(timetable.entries[i].time_delta),            &Font12, BLACK, WHITE);
-        }
+        Paint_DrawString_EN(x_base_lines[LINE],   y_base_line, headings[lang][LINE],   &Font12, WHITE, BLACK);
+        Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, headings[lang][DEST],   &Font12, WHITE, BLACK);
+        Paint_DrawString_EN(x_base_lines[TRACK],  y_base_line, headings[lang][TRACK],  &Font12, WHITE, BLACK);
+        Paint_DrawString_EN(x_base_lines[IN_MIN], y_base_line, headings[lang][IN_MIN], &Font12, WHITE, BLACK);
         y_base_line += y_base_line_increment;
-    }
+
+        Paint_DrawLine(1, y_base_line, EPD_2IN9_V2_HEIGHT, 18, BLACK, DOT_PIXEL_1X1, LINE_STYLE_SOLID);
+        y_base_line += 4;
+
+        for(unsigned i = 0; i < timetable.num_entries && i < 6; i++) {
+            Paint_DrawString_EN(x_base_lines[LINE],   y_base_line, timetable.entries[i].line,         &Font12, WHITE, BLACK);
+            Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, timetable.entries[i].destination,  &Font12, WHITE, BLACK);
+            Paint_DrawString_EN(x_base_lines[TRACK],  y_base_line, timetable.entries[i].track,        &Font12, WHITE, BLACK);
+
+            if(timetable.entries[i].planned_time < 0) {
+                Paint_DrawString_EN(x_base_lines[IN_MIN],   y_base_line, "-", &Font12, WHITE, BLACK);
+                Paint_DrawNum(      x_base_lines[IN_MIN]+7, y_base_line, -timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
+            } else {
+                Paint_DrawNum(      x_base_lines[IN_MIN],   y_base_line, timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
+            }
+
+            if(timetable.entries[i].time_delta != 0) {
+                Paint_DrawString_EN(x_base_lines[PLUS_MINUS], y_base_line, timetable.entries[i].time_delta > 0 ? "+" : "-", &Font12, WHITE, BLACK);
+                Paint_DrawNum(      x_base_lines[DELAY],      y_base_line, abs(timetable.entries[i].time_delta),            &Font12, BLACK, WHITE);
+            }
+            y_base_line += y_base_line_increment;
+        }
 
 
-    EPD_2IN9_V2_Display_Base(BlackImage);
-    DEV_Delay_ms(3000);
+        EPD_2IN9_V2_Display_Base(BlackImage);
+     }
+    display_sleep();
 }
 
 /* int main(void) { */
