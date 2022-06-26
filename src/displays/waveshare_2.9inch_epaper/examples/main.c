@@ -256,6 +256,23 @@ void display_message(const char* message) {
     display_sleep();
 }
 
+void draw_signed_number(int x, int y, int number, sFONT* font, UWORD Color_Background, UWORD Color_Foreground, bool draw_plus) {
+    if(number < 0) {
+        Paint_DrawString_EN(x,   y, "-",     font, Color_Background, Color_Foreground);
+        Paint_DrawNum(      x+7, y, -number, font, Color_Foreground, Color_Background);
+    } else if (number > 0) {
+        if (draw_plus) {
+            Paint_DrawString_EN(x,   y, "+",    font, Color_Background, Color_Foreground);
+            Paint_DrawNum(      x+7, y, number, font, Color_Foreground, Color_Background);
+        } else {
+            Paint_DrawNum(      x,   y, number, font, Color_Foreground, Color_Background);
+        }
+    } else {
+        Paint_DrawString_EN(x, y, "0", font, Color_Background, Color_Foreground);
+    }
+}
+
+
 void display_timetable(Simple_Timetable timetable, Language lang, Font_Size gs) {
     display_wake_up();
     {
@@ -294,17 +311,21 @@ void display_timetable(Simple_Timetable timetable, Language lang, Font_Size gs) 
             Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, timetable.entries[i].destination,  &Font12, WHITE, BLACK);
             Paint_DrawString_EN(x_base_lines[TRACK],  y_base_line, timetable.entries[i].track,        &Font12, WHITE, BLACK);
 
-            if(timetable.entries[i].planned_time < 0) {
-                Paint_DrawString_EN(x_base_lines[IN_MIN],   y_base_line, "-", &Font12, WHITE, BLACK);
-                Paint_DrawNum(      x_base_lines[IN_MIN]+7, y_base_line, -timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
-            } else {
-                Paint_DrawNum(      x_base_lines[IN_MIN],   y_base_line, timetable.entries[i].planned_time, &Font12, BLACK, WHITE);
-            }
+            draw_signed_number(x_base_lines[IN_MIN],  y_base_line, timetable.entries[i].planned_time, &Font12, WHITE, BLACK, false);
+            if(timetable.entries[i].time_delta != 0)
+                draw_signed_number(x_base_lines[PLUS_MINUS],  y_base_line, timetable.entries[i].time_delta, &Font12, WHITE, BLACK, true);
 
-            if(timetable.entries[i].time_delta != 0) {
-                Paint_DrawString_EN(x_base_lines[PLUS_MINUS], y_base_line, timetable.entries[i].time_delta > 0 ? "+" : "-", &Font12, WHITE, BLACK);
-                Paint_DrawNum(      x_base_lines[DELAY],      y_base_line, abs(timetable.entries[i].time_delta),            &Font12, BLACK, WHITE);
-            }
+            /* if(timetable.entries[i].planned_time < 0) { */
+            /*     Paint_DrawString_EN(x_base_lines[IN_MIN],   y_base_line, "-", &Font12, WHITE, BLACK); */
+            /*     Paint_DrawNum(      x_base_lines[IN_MIN]+7, y_base_line, -timetable.entries[i].planned_time, &Font12, BLACK, WHITE); */
+            /* } else { */
+            /*     Paint_DrawNum(      x_base_lines[IN_MIN],   y_base_line, timetable.entries[i].planned_time, &Font12, BLACK, WHITE); */
+            /* } */
+
+            /* if(timetable.entries[i].time_delta != 0) { */
+            /*     Paint_DrawString_EN(x_base_lines[PLUS_MINUS], y_base_line, timetable.entries[i].time_delta > 0 ? "+" : "-", &Font12, WHITE, BLACK); */
+            /*     Paint_DrawNum(      x_base_lines[DELAY],      y_base_line, abs(timetable.entries[i].time_delta),            &Font12, BLACK, WHITE); */
+            /* } */
             y_base_line += y_base_line_increment;
         }
 

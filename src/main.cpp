@@ -196,7 +196,7 @@ int main() {
     db::Station station = db::find_station("Petershausen");
     println("Found %s", station.eva_nr);
 
-    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 5);
+    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 6);
 
     defer {
         station.free();

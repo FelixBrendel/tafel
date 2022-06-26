@@ -937,14 +937,11 @@ namespace db {
     }
 
     void Timetable_Stop::print() {
-        println("%s %s", trip_label.category.data,
-                (departure_event)
-                ? (departure_event.line.data
-                   ? departure_event.line.data
-                   : trip_label.train_number.data)
-                : (arrival_event.line.data
-                   ? arrival_event.line.data
-                   : trip_label.train_number.data));
+        println("%s %s (train number: %s)", trip_label.category.data,
+                (departure_event
+                ? departure_event.line.data
+                : arrival_event.line.data),
+                trip_label.train_number.data);
 
         with_indentation(2) {
             println("ID: %s", id.data);
@@ -1031,3 +1028,52 @@ namespace db {
     }
 
 }
+
+
+/*
+  for SEV:
+
+  <timetable station='Petershausen(Obb)'>
+      <s id="4470293636139117844-2206262355-5">
+        <tl t="p" o="B7" c="Bus" n="59109"/>
+        <ar pt="2206270049" pp="" l="SEV" ppth="Rohrbach(Ilm)|Pfaffenhofen(Ilm)|Reichertshausen(Ilm)|Paindorf"/>
+        <dp pt="2206270049" pp="" l="SEV" ppth="Dachau Bahnhof|M&#252;nchen Hbf"/>
+      </s>
+  </timetable>
+
+  */
+
+/*
+  for S:
+
+  <timetable station='Petershausen(Obb)'>
+      <s id="-127101225147621992-2206270024-7">
+        <tl f="S" t="p" o="800725" c="S" n="8010"/>
+        <ar pt="2206270047" pp="6" l="2" ppth="M&#252;nchen-Allach|M&#252;nchen-Karlsfeld|Dachau Bahnhof|Hebertshausen|R&#246;hrmoos|Vierkirchen-Esterhofen"/>
+      </s>
+   </timetable>
+  */
+
+/*
+  for RB:
+
+  <timetable station='Petershausen(Obb)'>
+      <s id="7862280424909379454-2206270722-3">
+        <tl f="N" t="p" o="800765" c="RB" n="59090"/>
+        <ar pt="2206270747" pp="1" l="16" ppth="M&#252;nchen Hbf|Dachau Bahnhof"/>
+        <dp pt="2206270748" pp="1" l="16" ppth="Paindorf|Reichertshausen(Ilm)|Pfaffenhofen(Ilm)|Rohrbach(Ilm)|Baar-Ebenhausen|Ingolstadt Hbf|Ingolstadt Nord|Ingolstadt Audi|Gaimersheim|Eitensheim|Tauberfeld|Adelschlag|Eichst&#228;tt Bahnhof|Dollnstein|Solnhofen|Pappenheim|Treuchtlingen|Wei&#223;enburg(Bay)|Ellingen(Bay)|Pleinfeld|M&#252;hlstetten|Georgensgm&#252;nd|Unterheckenhofen|Roth|Schwabach|N&#252;rnberg Hbf"/>
+      </s>
+  </timetable>
+  */
+
+/*
+  for RE:
+
+  <timetable station='Petershausen(Obb)'>
+    <s id="-3901580007931980802-2206270501-3">
+      <tl f="N" t="p" o="800765" c="RE" n="4000"/>
+      <ar pt="2206270521" pp="1" l="1" ppth="M&#252;nchen Hbf|Dachau Bahnhof"/>
+      <dp pt="2206270522" pp="1" l="1" ppth="Pfaffenhofen(Ilm)|Rohrbach(Ilm)|Ingolstadt Hbf|Ingolstadt Nord|Kinding(Altm&#252;hltal)|Allersberg(Rothsee)|N&#252;rnberg Hbf"/>
+    </s>
+  </timetable>
+  */
