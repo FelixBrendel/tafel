@@ -152,27 +152,44 @@ void maybe_update_software() {
     }
 }
 
+bool read_env(const char* env_var_name, char* dest, int dest_size) {
+    char* env_var_val = getenv(env_var_name);
+    if (!env_var_val)
+        return false;
+
+    strncpy(dest, env_var_val, dest_size-1);
+    dest[dest_size-1] = '\0';
+
+    return true;
+}
+
 int main() {
     init_display();
     defer { deinit_display(); };
 
     display_message("Loading");
 
-    char db_auth_token[64];
-    memset(db_auth_token, 0 , sizeof(db_auth_token));
-    {
-        char* env_auth_token = getenv("DB_AUTH_TOKEN");
-        if (!env_auth_token) {
-            log_error("Environment variable DB_AUTH_TOKEN is not set");
-            return 1;
-        } else {
-            log_info("Got db token: %s.", env_auth_token);
-        }
-        strncpy(db_auth_token, env_auth_token, sizeof(db_auth_token)-1);
-        db_auth_token[sizeof(db_auth_token)-1] = '\n';
+    char db_client_id[33];
+    char db_client_secret[33];
+    memset(db_client_id,     0, sizeof(db_client_id));
+    memset(db_client_secret, 0, sizeof(db_client_secret));
+
+    if(read_env("DB_CLENT_ID", db_client_id, sizeof(db_client_id))) {
+        log_info("Got DB_CLENT_ID: %s.", db_client_id);
+    } else {
+        log_error("Environment variable DB_CLENT_ID is not set");
+        return 1;
     }
 
-    db::init(db_auth_token);
+    if (read_env("DB_CLENT_SECRET", db_client_secret, sizeof(db_client_secret))){
+        log_info("Got DB_CLENT_SECRET: %s.", db_client_secret);
+    } else {
+        log_error("Environment variable DB_CLENT_SECRET is not set");
+        return 1;
+    }
+
+
+    db::init(db_client_id, db_client_secret);
     defer { db::deinit(); };
 
     Time now = Time::now();

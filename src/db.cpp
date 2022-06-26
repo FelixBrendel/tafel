@@ -11,7 +11,11 @@
 #include <cstring>
 
 namespace db {
-    const char* authorization_token;
+    const char* const API_ENDPOINT =
+        "https://apis.deutschebahn.com/db-api-marketplace/apis/timetables/v1";
+
+    u32  api_header_arg_count;
+    char api_header_args[2][64];
 
     enum struct Custom_XML_Data_Types : u8 {
         Maybe_Time,
@@ -55,7 +59,10 @@ namespace db {
         return length;
     }
 
-    void init(const char* auth_token) {
+    void init(const char* client_id, const char* client_secret) {
+        profile_function;
+        log_trace();
+
         if (!net_init()) {
             printf("net init error.");
         }
@@ -63,10 +70,17 @@ namespace db {
         xml::init();
         xml::register_custom_reader_function((xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, read_time);
         xml::register_custom_reader_function((xml::Data_Type)Custom_XML_Data_Types::Path_List, read_path_list);
-        authorization_token = auth_token;
+
+        memset(api_header_args, 0, sizeof(api_header_args));
+        snprintf(api_header_args[0], sizeof(api_header_args[0]), "DB-Api-Key: %s", client_secret);
+        snprintf(api_header_args[1], sizeof(api_header_args[1]), "DB-Client-ID: %s", client_id);
+        api_header_arg_count = 2;
     }
 
     void deinit() {
+        profile_function;
+        log_trace();
+
         xml::deinit();
         net_deinit();
     }
@@ -180,6 +194,9 @@ namespace db {
 
     u32 parse_event_end(char* xml, void* vp_event) {
         xml::pop_handler_from_parser_stack();
+
+        Event* event = (Event*)vp_event;
+
         return xml::eat_until_end_of_tag(xml);
     }
 
@@ -322,8 +339,6 @@ namespace db {
     }
 
     Station find_station(const char* station_name) {
-        profile_function;
-
         String url_encoded_station = url_encode_string(station_name);
         defer {
             free(url_encoded_station.data);
@@ -332,7 +347,8 @@ namespace db {
         Station station {};
 
         String_Builder sb = String_Builder::create_from({
-            "https://api.deutschebahn.com/timetables/v1/station/",
+            API_ENDPOINT,
+            "/station/",
             url_encoded_station.data
         });
         char* url = sb.build();
@@ -341,10 +357,17 @@ namespace db {
             free(url);
         };
 
+
+        const char* header_args[] {
+            api_header_args[0],
+            api_header_args[1],
+        };
+
         Request req {
-            .authorization = authorization_token,
-            .accept        = "application/xml",
-            .url           = url,
+            .url              = url,
+            .accept           = "application/xml",
+            .header_arg_count = array_length(header_args),
+            .header_args      = header_args,
         };
 
         Response res = net_request(req);
@@ -403,11 +426,18 @@ namespace db {
             free(url);
         };
 
-        Request req {
-            .authorization = authorization_token,
-            .accept        = "application/xml",
-            .url           = url,
+        const char* header_args[] {
+            api_header_args[0],
+            api_header_args[1],
         };
+
+        Request req {
+            .url              = url,
+            .accept           = "application/xml",
+            .header_arg_count = array_length(header_args),
+            .header_args      = header_args,
+        };
+
 
         Response res = net_request(req);
         defer { res.free(); };
@@ -437,8 +467,7 @@ namespace db {
     Timetable get_recent_changes(const char* eva_nr) {
         profile_function;
         String_Builder sb = String_Builder::create_from({
-            "https://api.deutschebahn.com/timetables/v1/rchg/",
-            eva_nr,
+            API_ENDPOINT, "/rchg/", eva_nr,
         });
 
         return get_timetable_from_url(sb);
@@ -447,25 +476,20 @@ namespace db {
     Timetable get_full_changes(const char* eva_nr) {
         profile_function;
         String_Builder sb = String_Builder::create_from({
-            "https://api.deutschebahn.com/timetables/v1/fchg/",
-            eva_nr,
+            API_ENDPOINT, "/fchg/", eva_nr,
         });
 
         return get_timetable_from_url(sb);
     }
 
     Timetable get_timetable_one_hour(const char* eva_nr, Time time) {
-        profile_function;
         char date_str[10];
         char hour_str[10];
 
         sprintf(date_str, "%02d%02d%02d", time.year-2000, time.month, time.day);
         sprintf(hour_str, "%02d", time.hour);
         String_Builder sb = String_Builder::create_from({
-            "https://api.deutschebahn.com/timetables/v1/plan/",
-            eva_nr, "/",
-            date_str, "/",
-            hour_str
+            API_ENDPOINT, "/plan/", eva_nr, "/", date_str, "/", hour_str
         });
 
         return get_timetable_from_url(sb);
@@ -859,6 +883,9 @@ namespace db {
         else if (planned_time)
             println("time: %02d:%02d Uhr", planned_time.hour, planned_time.minute);
 
+        if (!planned_path && !changed_path) {
+            log_error("waht the fucjk");
+        }
 
         if (is_arrival) {
             if (planned_path) {
@@ -868,6 +895,7 @@ namespace db {
             if (changed_path) {
                 String origin = changed_path[0];
                 println("changed origin: %{->Str}", &origin);
+                log_info("splits: %u", changed_path.splits.count);
             }
         } else {
             if (planned_path) {

@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include "ftb/arraylist.hpp"
+#include "ftb/print.hpp"
+#include "ftb/macros.hpp"
+#include "ftb/profiler.hpp"
 #include "net.h"
 #include "utf-8.hpp"
 
@@ -44,23 +47,17 @@ Response net_request(Request req) {
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void*)&(r.header));
 
     curl_slist *header_args = NULL;
-    if (req.authorization || req.accept) {
+    if (req.header_arg_count > 0 || req.accept) {
         String_Builder sb;
         sb.init();
         defer {
             sb.deinit();
         };
 
-        if (req.authorization) {
-            sb.append("Authorization: ");
-            sb.append(req.authorization);
-            char* str = sb.build();
-            defer {
-                sb.clear();
-                free(str);
-            };
-            header_args = curl_slist_append(header_args, str);
+        for (u32 i = 0; i < req.header_arg_count; ++i) {
+            header_args = curl_slist_append(header_args, req.header_args[i]);
         }
+
         if (req.accept) {
             sb.append("Accept: ");
             sb.append(req.accept);
@@ -95,7 +92,7 @@ bool is_url_char(const char c) {
     return
         ('0' <= c && c <= '9') ||
         ('a' <= c && c <= 'z') ||
-        ('A' <= c && c <= 'A') ||
+        ('A' <= c && c <= 'Z') ||
         (c == '-') || (c == '.') ||
         (c == '_') || (c == '~');
 }

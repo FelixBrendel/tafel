@@ -6,6 +6,7 @@
 - autoupdate is run as root so maybe the premissions are messed up by the git commands it runs. to restore them run: sudo chown -R <actual>:wheel .
 
 - the executable ./tafel when has to be run as sudo
-- the DB_AUTH_TOKEN environment variable must be set (even when run as sudo, so maybe run as sudo -E)  
+
+- the DB_CLENT_ID and DB_CLENT_SECRET environment variables must be set (even when run as sudo, so maybe run as sudo -E)
 
 manual full update: sudo chown -R felixb:wheel . && git pull && git reset --hard && ./build.sh && sudo ./tafel

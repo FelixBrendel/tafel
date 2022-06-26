@@ -15,9 +15,11 @@ struct Response {
 };
 
 struct Request {
-    const char* authorization;
-    const char* accept;
     const char* url;
+    const char* accept;
+
+    u32          header_arg_count;
+    const char** header_args;
 };
 
 bool net_init();
