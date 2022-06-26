@@ -371,7 +371,7 @@ namespace db {
         };
 
         Response res = net_request(req);
-        print_response(res, 10000);
+        // print_response(res, 10000);
         if (res.response_code != 200) {
             println("sad response.");
             with_indentation(4) {

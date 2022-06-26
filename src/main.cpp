@@ -83,10 +83,22 @@ void maybe_update_software() {
         }
 
         log_info("pulling");
-        if (system("git pull")) {
-            log_error("git pull returned non zero");
-            return;
+
+        // if (system("git pull")) {
+        //     log_error("git pull returned non zero");
+        //     return;
+        // }
+        {
+            char git_reset_command[sizeof("git reset --hard a09cd199a7b414463772c093cca936d885a020a3")];
+            memset(git_reset_command, 0, sizeof(git_reset_command));
+            snprintf(git_reset_command, sizeof(git_reset_command), "git reset --hard %s", upstream_hash);
+            log_info("running: %s", git_reset_command);
+            if (system(git_reset_command)) {
+                log_error("git reset returned non zero");
+                return;
+            }
         }
+
 
         char commit_msg_str[120];
         memset(commit_msg_str, 0, sizeof(commit_msg_str));
@@ -196,7 +208,7 @@ int main() {
     db::Station station = db::find_station("Petershausen");
     println("Found %s", station.eva_nr);
 
-    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 6);
+    db::Timetable timetable = db::get_timetable(station.eva_nr.data, now, 5);
 
     defer {
         station.free();
