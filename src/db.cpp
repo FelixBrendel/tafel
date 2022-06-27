@@ -4,6 +4,7 @@
 #include "ftb/print.hpp"
 #include "ftb/profiler.hpp"
 #include "ftb/types.hpp"
+
 #include "net.h"
 #include "time.hpp"
 #include "xml.hpp"
@@ -119,7 +120,7 @@ namespace db {
         print_string_lines(r.response.data, string_lines);
     }
 
-    u32 trip_label_parser (char* xml, void* vp_stop) {
+    void trip_label_parser_hook (void* vp_stop) {
         Maybe<Trip_Label>* trip_label = (Maybe<Trip_Label>*)vp_stop;
         trip_label->__exists = true;
 
@@ -128,11 +129,9 @@ namespace db {
         create_pipe("o", xml::Data_Type::String, &trip_label->owner);
         create_pipe("c", xml::Data_Type::String, &trip_label->category);
         create_pipe("n", xml::Data_Type::String, &trip_label->train_number);
-
-        return xml::parse_attributes(xml);
     }
 
-    u32 parse_message(char* xml, void* vp_message_list) {
+    void parse_message_hook(void* vp_message_list) {
         Array_List<Message>* message_list = (Array_List<Message>*)vp_message_list;
         if (!message_list->data) {
             message_list->init();
@@ -157,11 +156,9 @@ namespace db {
         create_pipe("from", (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, &message->valid_from);
         create_pipe("to",   (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, &message->valid_to);
         create_pipe("ts",   (xml::Data_Type)Custom_XML_Data_Types::Maybe_Time, &message->time_stamp);
-
-        return xml::parse_attributes(xml);
     }
 
-    u32 parse_event_start(char* xml, void* vp_event) {
+    void parse_event_start(void* vp_event) {
         Maybe<Event>* event = (Maybe<Event>*)vp_event;
         event->__exists = true;
         event->messages.init();
@@ -184,24 +181,19 @@ namespace db {
         create_pipe("l",    xml::Data_Type::String,  &event->line);
 
         xml::push_handler_to_parser_stack({
-            .key          = "m", // messages
-            .open_handler = parse_message,
-            .user_data    = &(event->messages)
+            .key         = "m", // messages
+            .open_hook   = parse_message_hook,
+            .user_data   = &(event->messages)
         });
 
-        return xml::parse_attributes(xml);
     }
 
-    u32 parse_event_end(char* xml, void* vp_event) {
+    void parse_event_end(void* vp_event) {
         xml::pop_handler_from_parser_stack();
-
-        Event* event = (Event*)vp_event;
-
-        return xml::eat_until_end_of_tag(xml);
     }
 
 
-    u32 timetable_parser_open(char* xml, void* vp_timetable) {
+    void timetable_parser_open(void* vp_timetable) {
         /*
          * <timetable station='Petershausen(Obb)'>
          *   <s id="5555209269320973371-2203311032-1">
@@ -248,7 +240,7 @@ namespace db {
 
         xml::push_handler_to_parser_stack({
             .key          = "s", // stops
-            .open_handler = [] (char* xml, void* vp_timetable) -> u32 {
+            .open_hook = [] (void* vp_timetable) -> void {
                 Timetable* timetable = (Timetable*)vp_timetable;
                 timetable->stops.append({});
                 Timetable_Stop* last = &timetable->stops.last_element();
@@ -258,84 +250,73 @@ namespace db {
 
                 xml::push_handler_to_parser_stack({
                     .key          = "tl", // trip label
-                    .open_handler = trip_label_parser,
+                    .open_hook = trip_label_parser_hook,
                     .user_data = &last->trip_label
                 });
                 xml::push_handler_to_parser_stack({
                     .key           = "ar", // arrival event
-                    .open_handler  = parse_event_start,
-                    .close_handler = parse_event_end,
+                    .open_hook  = parse_event_start,
+                    .close_hook = parse_event_end,
                     .user_data     = &last->arrival_event
                 });
                 xml::push_handler_to_parser_stack({
-                    .key           = "dp", // departure event
-                    .open_handler  = parse_event_start,
-                    .close_handler = parse_event_end,
-                    .user_data     = &last->departure_event
+                    .key        = "dp", // departure event
+                    .open_hook  = parse_event_start,
+                    .close_hook = parse_event_end,
+                    .user_data  = &last->departure_event
                 });
                 xml::push_handler_to_parser_stack({
                     .key          = "m", // messages
-                    .open_handler = parse_message,
+                    .open_hook    = parse_message_hook,
                     .user_data    = &(last->messages)
                 });
                 xml::push_handler_to_parser_stack({
                     .key          = "ref", // reference
-                    .open_handler = trip_label_parser,
+                    .open_hook = trip_label_parser_hook,
                     .user_data = &last->trip_label
                 });
-
-                return xml::parse_attributes(xml);
             },
-            .close_handler = [] (char* xml, void*) -> u32 {
-                xml::pop_handler_from_parser_stack(); // tl
-                xml::pop_handler_from_parser_stack(); // ar
-                xml::pop_handler_from_parser_stack(); // dp
+            .close_hook = [] (void*) -> void {
+                xml::pop_handler_from_parser_stack(); // ref
                 xml::pop_handler_from_parser_stack(); // m
-                return xml::eat_until_end_of_tag(xml);
+                xml::pop_handler_from_parser_stack(); // dp
+                xml::pop_handler_from_parser_stack(); // ar
+                xml::pop_handler_from_parser_stack(); // tl
             },
             .user_data = vp_timetable
         });
         xml::push_handler_to_parser_stack({
-            .key          = "m", // messages
-            .open_handler = parse_message,
-            .user_data    = &(timetable->messages)
+            .key       = "m", // messages
+            .open_hook = parse_message_hook,
+            .user_data = &(timetable->messages)
         });
 
-        return xml::parse_attributes(xml);
     }
 
-    u32 timetable_parser_close(char* xml, void* vp_timetable) {
-        xml::pop_handler_from_parser_stack(); // s
+    void timetable_parser_close(void* vp_timetable) {
         xml::pop_handler_from_parser_stack(); // m
-        return xml::eat_until_end_of_tag(xml);
+        xml::pop_handler_from_parser_stack(); // s
     }
 
 
-    u32 station_parser_open(char* xml, void* vp_station) {
+    void station_parser(void* vp_station) {
         Station* station = (Station*)vp_station;
-
         create_pipe("name",  xml::Data_Type::String,  &station->name);
         create_pipe("eva",   xml::Data_Type::String,  &station->eva_nr);
         create_pipe("ds100", xml::Data_Type::String,  &station->ds100_nr);
         create_pipe("db",    xml::Data_Type::Boolean, &station->is_db);
-
-        return xml::parse_attributes(xml);
     }
 
-    u32 stations_parser_open(char* xml, void* vp_station) {
+    void stations_parser_open(void* vp_station) {
         xml::push_handler_to_parser_stack({
-            .key          = "station",
-            .open_handler = station_parser_open,
-            .user_data    = vp_station
+            .key       = "station",
+            .open_hook = station_parser,
+            .user_data = vp_station
         });
-
-        // no pipes, so just skip to end
-        return xml::parse_attributes(xml);
     }
 
-    u32 stations_parser_close(char* xml, void* vp_station) {
+    void stations_parser_close(void* vp_station) {
         xml::pop_handler_from_parser_stack();
-        return xml::eat_until_end_of_tag(xml);
     }
 
     Station find_station(const char* station_name) {
@@ -386,12 +367,13 @@ namespace db {
 
         xml::push_handler_to_parser_stack({
             .key           = "stations",
-            .open_handler  = stations_parser_open,
-            .close_handler = stations_parser_close,
+            .open_hook  = stations_parser_open,
+            .close_hook = stations_parser_close,
             .user_data     = &station
         });
 
         xml::parse(res.response.data);
+
         xml::pop_handler_from_parser_stack();
 
         return station;
@@ -450,12 +432,11 @@ namespace db {
             return {};
         }
 
-
         xml::push_handler_to_parser_stack({
-            .key           = "timetable",
-            .open_handler  = timetable_parser_open,
-            .close_handler = timetable_parser_close,
-            .user_data     = &timetable
+            .key        = "timetable",
+            .open_hook  = timetable_parser_open,
+            .close_hook = timetable_parser_close,
+            .user_data  = &timetable
         });
 
         xml::parse(res.response.data);
@@ -682,8 +663,23 @@ namespace db {
     }
 
     void Event::update(Event* other) {
-        maybe_take_maybe_free(planned_path.string);
-        maybe_take_maybe_free(changed_path.string);
+        if (other->planned_path) {
+            if (planned_path) {
+                planned_path.deinit();
+                planned_path.string.free();
+            }
+            planned_path = other->planned_path;
+            memset(&(other->planned_path), 0, sizeof((other->planned_path)));
+        }
+        if (other->changed_path) {
+            if (changed_path) {
+                changed_path.deinit();
+                changed_path.string.free();
+            }
+            changed_path = other->changed_path;
+            memset(&(other->changed_path), 0, sizeof((other->changed_path)));
+        }
+
         maybe_take_maybe_free(planned_platform);
         maybe_take_maybe_free(changed_platform);
         maybe_take(planned_time);
@@ -883,9 +879,8 @@ namespace db {
         else if (planned_time)
             println("time: %02d:%02d Uhr", planned_time.hour, planned_time.minute);
 
-        if (!planned_path && !changed_path) {
-            log_error("waht the fucjk");
-        }
+        if (cancellation_time)
+            println("CANCELLED (time: %02d:%02d Uhr)", cancellation_time.hour, cancellation_time.minute);
 
         if (is_arrival) {
             if (planned_path) {
@@ -895,7 +890,6 @@ namespace db {
             if (changed_path) {
                 String origin = changed_path[0];
                 println("changed origin: %{->Str}", &origin);
-                log_info("splits: %u", changed_path.splits.count);
             }
         } else {
             if (planned_path) {
@@ -923,9 +917,9 @@ namespace db {
         id.free();
         eva_nr.free();
 
-        trip_label.free();
+        if (trip_label)      trip_label.free();
 
-        if (arrival_event)  arrival_event.free();
+        if (arrival_event)   arrival_event.free();
         if (departure_event) departure_event.free();
 
         if (messages.data) {

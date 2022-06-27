@@ -20,8 +20,10 @@ pushd $SCRIPTPATH > /dev/null
 if [ $HOSTNAME != rapi ]
 then
     echo "Not running on raspberry"
+    make clean
     make || exit 1
-    time ./tafel
+    # valgrind --leak-check=full ./tafel
+    ./tafel
 else
     echo "Running on raspberry"
     echo "building waveshare"

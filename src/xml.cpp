@@ -1,10 +1,11 @@
-#include "ftb/macros.hpp"
 #define FTB_PRINT_IMPL
 #define FTB_HASHMAP_IMPL
 
+#include "ftb/print.hpp"
 #include "xml.hpp"
 #include "ftb/arraylist.hpp"
-#include "ftb/print.hpp"
+#include "ftb/macros.hpp"
+#include "ftb/profiler.hpp"
 #include <cstdio>
 #include <cstring>
 
@@ -21,6 +22,7 @@ namespace xml {
     Array_List<Pipe> pipes;
     Stack<Parser_Stack_Entry> parser_stack;
 
+
     void parser_error(const char* fmt, ...) {
         println("%{color<}XML Parser error: %{>color}", console_red);
         va_list ap;
@@ -31,7 +33,7 @@ namespace xml {
         println("\nParser stack (bottom to top):");
         for (Parser_Stack_Entry pse : parser_stack.array_list) {
             println("  { key: % 14s, open: %p, close: %p } ",
-                    pse.key, pse.open_handler, pse.close_handler);
+                    pse.key, pse.open_hook, pse.close_hook);
         }
 
         println("\nPipes (bottom to top):");
@@ -44,17 +46,19 @@ namespace xml {
 
 
     u32 skip_tag(char* xml, void* _) {
-        return xml::parse_attributes(xml);
+        log_trace();
+        profile_function;
+        return xml::parse_attributes(xml).read_bytes;
     }
 
     void init() {
         pipes.init();
         parser_stack.init();
 
-        push_handler_to_parser_stack({
-            .key = "?xml",
-            .open_handler = skip_tag
-        });
+        // push_handler_to_parser_stack({
+            // .key = "?xml",
+            // .open_hook = skip_tag
+        // });
     }
 
     void deinit() {
@@ -195,6 +199,7 @@ namespace xml {
         while (true) {
             if (!*xml) return eaten;
 
+
             if (*xml == '<') {
                 if (*(xml+1) == '!') {
                     u32 comment = eat_comment(xml);
@@ -283,7 +288,7 @@ namespace xml {
         pipes.append({attrib_name, type, dst});
     }
 
-    u32 parse_attributes(char* attribs) {
+    Parsing_Result parse_attributes(char* attribs) {
         u32 total_parsed = 0;
 
         u32 parsed = 0;
@@ -295,7 +300,7 @@ namespace xml {
 
             if (!*attribs) {
                 printf("unexpeceted EOF in attribute list\n");
-                return total_parsed;
+                return {total_parsed, false};
             }
 
             // find end of attrib name
@@ -362,7 +367,7 @@ namespace xml {
                     // be a bool
                     if (pipe.type != Data_Type::Boolean) {
                         printf("For attributes with no value, booleans have to be registered.\n");
-                        return total_parsed;
+                        return {total_parsed, false};
                     }
                     *((bool*)pipe.destination) = true;
                 }
@@ -388,15 +393,17 @@ namespace xml {
             }
         }
 
+        bool self_closing = false;
         if (*attribs == '/') {
             // skip /
+            self_closing = true;
             ++attribs;
             ++total_parsed;
         }
         // skip closing tag
         ++attribs;
         ++total_parsed;
-        return total_parsed;
+        return {total_parsed, self_closing};
     }
 
     u32 parse(char* xml) {
@@ -444,25 +451,38 @@ namespace xml {
             total_parsed += parsed;
 
             Parser_Stack_Entry handler_entry = get_handler(tag);
-            parser_function handler = nullptr;
+            parser_hook handler = nullptr;
+
             if (handler_entry.key) {
                 if (closing_tag) {
-                    handler = handler_entry.close_handler;
+                    handler = handler_entry.close_hook;
                 } else {
-                    handler = handler_entry.open_handler;
+                    handler = handler_entry.open_hook;
                 }
             }
 
-            if (handler)
-                parsed = handler(xml, handler_entry.user_data);
+            if (handler) {
+                handler(handler_entry.user_data);
+                Parsing_Result parsing_res = parse_attributes(xml);;
+
+                xml += parsing_res.read_bytes;
+                if (parsing_res.should_run_closing_handler) {
+                    if (handler_entry.close_hook) {
+                        handler_entry.close_hook(handler_entry.user_data);
+                        // NOTE(Felix): we come here if tag was self closing and
+                        //   we run the close_hook. We do not need to skip to
+                        //   anywhere, we are already at the end of the tag.
+                    }
+                }
+            }
             else {
                 if (!closing_tag) {
-                    printf("no tag handler for tag '%s'\n", tag);
+                    log_warning("no tag handler for tag '%s'", tag);
                 }
                 parsed = eat_until_end_of_tag(xml);
+                xml += parsed;
             }
 
-            xml += parsed;
         }
 
         return total_parsed;

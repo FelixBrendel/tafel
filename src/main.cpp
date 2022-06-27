@@ -267,15 +267,19 @@ int main() {
         }
 
         display_timetable({entries.data, entries.count, ""}, GERMAN, MEDIUM);
-        // TODO(Felix): free the line strings
+        // NOTE(Felix): free the line strings
+        for (auto& entry : entries) {
+            free((char*)entry.line);
+        }
 
         log_info("entering update loop");
+#if ON_RASPBERRY
         while(1) {
             maybe_update_software();
 
             sleep_in_sec(30);
         }
-
+#endif
     }
 
     return 0;

@@ -12,7 +12,7 @@ ifeq ($(HOST), rapi)
 	objs    = src/displays/waveshare_2.9inch_epaper/bin/*.o
 	libs    = -lbcm2835 -lm
 else
-	defines =
+	defines = -g
     objs    =
     libs    =
 endif

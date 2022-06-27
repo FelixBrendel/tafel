@@ -10,7 +10,7 @@ struct Empty {};
 template <typename type>
 struct Maybe : type {
     bool __exists;
-    
+
     void operator=(type v) {
         memcpy(this, &v, sizeof(type));
         __exists = true;
@@ -50,15 +50,23 @@ DEFINE_BASIC_TYPE_MAYBE(f64);
 #undef DEFINE_BASIC_TYPE_MAYBE
 
 namespace xml {
-    typedef u32 (*parser_function)(char* position, void* user_data);
-    typedef u32 (*reader_function)(char* position, void* out_read_value);
+    struct Parsing_Result {
+        u32  read_bytes;
+        bool should_run_closing_handler;
+    };
+
+
+    typedef void (*parser_hook)(void* user_data);
+    typedef u32  (*reader_function)(char* position, void* out_read_value);
 
     struct Parser_Stack_Entry {
-        const char*     key;
-        parser_function open_handler;
-        parser_function close_handler;
-        void*           user_data;
+        const char* key;
+        parser_hook open_hook;
+        parser_hook close_hook;
+        void*       user_data;
     };
+
+    extern Stack<Parser_Stack_Entry> parser_stack;
 
     enum struct Data_Type : u8 {
         String = 1 << 7,
@@ -96,6 +104,7 @@ namespace xml {
     u32 peek_tag_name(char* xml, char** out_tag_name, u32* out_tag_len);
 
     u32 parse(char* string);
-    u32 parse_attributes(char* string);
     u32 default_handler(char* position, void* user_data);
+    Parsing_Result parse_attributes(char* string);
+
 }
