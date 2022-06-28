@@ -332,7 +332,7 @@ int init_font() {
             if ((x_offset+bmp_width_in_px) % 8 != 0)
                 ++bit_ptr;
 
-            bit_ptr += (int)((char_width_in_px-x_end) / 8.0);
+            bit_ptr += (int)ciel((char_width_in_px-x_end) / 8.0)-1;
 
             bit_ptr += (int)ceil(x_start/8.0);
             shift = 7-(x_start % 8);
