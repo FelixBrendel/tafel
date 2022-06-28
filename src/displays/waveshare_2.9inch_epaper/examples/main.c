@@ -308,7 +308,23 @@ int init_font() {
         }
 
 
-
+        {
+            uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0))];
+            for (int y = 0; y < unicode_font.Height; ++y) {
+                for (int b = 0; b < (int)ceil(unicode_font.Width / 8.0); ++b) {
+                    for (int i = 8; i >= 0; --i) {
+                        if (*bit_ptr & (1 << i)) {
+                            printf("  ");
+                        } else {
+                            printf("@@");
+                        }
+                    }
+                    ++bit_ptr;
+                }
+                printf("\n");
+            }
+            printf("Generating letter for cp: %i\n", cp);
+        }
     }
 
 
