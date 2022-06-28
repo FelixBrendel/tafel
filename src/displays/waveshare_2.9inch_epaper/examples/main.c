@@ -334,7 +334,7 @@ int init_font() {
 
             bit_ptr += (int)ciel((char_width_in_px-x_end) / 8.0)-1;
 
-            bit_ptr += (int)ceil(x_start/8.0);
+            bit_ptr += (int)(x_start/8.0);
             shift = 7-(x_start % 8);
         }
 
