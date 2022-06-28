@@ -330,7 +330,7 @@ int init_font() {
             /*     ++bit_ptr; */
             /* } */
 
-            if (x_offset+bmp_width_in_px % 8 != 0)
+            if ((x_offset+bmp_width_in_px) % 8 != 0)
                 ++bit_ptr;
 
             bit_ptr += (int)((char_width_in_px-x_end) / 8.0);
