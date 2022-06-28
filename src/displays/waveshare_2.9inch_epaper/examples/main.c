@@ -290,7 +290,7 @@ int init_font() {
                 uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
                 uint8_t bit   = pixel >= 0x80;
 
-                *bit_ptr |= (bit << shift);
+                *bit_ptr |= (bit << (7-shift));
 
                 ++shift;
                 if (shift == 8) {
@@ -301,7 +301,7 @@ int init_font() {
             if (unicode_font.Width % 8 != 0)
                 ++bit_ptr;
 
-            bit_ptr += (int)ceil((char_width_in_px-x_end) / 8.0); 
+            bit_ptr += (int)ceil((char_width_in_px-x_end) / 8.0);
 
             bit_ptr += x_start/8;
             shift = x_start % 8;
