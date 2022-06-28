@@ -359,6 +359,7 @@ int display_wake_up() {
 }
 
 void draw_unicode_string(int x, int y, const char* string, sFONT* font, UWORD Color_Background, UWORD Color_Foreground) {
+    u32 length = 0;
     while (*string) {
         UTF_8_Code_Point cp = bytes_to_code_point((const byte*)string);
         u32 code_point = cp.code_point;
@@ -397,7 +398,10 @@ void draw_unicode_string(int x, int y, const char* string, sFONT* font, UWORD Co
 
 
         string += cp.byte_length;
+        length += 1;
     }
+
+    printf("draw_unicode_char drew %u glyphs\n", length);
 
 }
 
