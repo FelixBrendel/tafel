@@ -290,7 +290,7 @@ int init_font() {
                 uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
                 uint8_t bit   = pixel >= 0x80;
 
-                *bit_ptr |= (bit << (7-shift));
+                *bit_ptr |= (bit << (shift));
 
                 ++shift;
                 if (shift == 8) {
