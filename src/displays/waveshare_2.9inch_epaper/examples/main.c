@@ -325,10 +325,10 @@ int init_font() {
                 }
             }
 
-            if (shift != 7) {
-                printf("go next");
-                ++bit_ptr;
-            }
+            /* if (shift != 7) { */
+            /*     printf("go next"); */
+            /*     ++bit_ptr; */
+            /* } */
 
             /* if ((x_offset+bmp_width_in_px) % 8 != 0) */
                 /* ++bit_ptr; */
