@@ -204,7 +204,7 @@ static inline int max(int a, int b) {
     return a > b ? a : b;
 }
 
-int init_font() {
+int init_fonts() {
     display_message("initting font");
     unsigned char* ttf_buffer = (unsigned char*)malloc(1<<25);
 
@@ -469,10 +469,14 @@ int display_wake_up() {
 }
 
 void draw_unicode_string(int x, int y, const char* string, sFONT* font, UWORD Color_Background, UWORD Color_Foreground) {
-    u32 length = 0;
+    int initial_x = x;
+    int initial_y = y;
+
     while (*string) {
         UTF_8_Code_Point cp = bytes_to_code_point((const byte*)string);
         u32 code_point = cp.code_point;
+        string += cp.byte_length;
+
         // draw one char
         {
             uint32_t char_offset = code_point * font->Height * (font->Width / 8 + (font->Width % 8 ? 1 : 0));
@@ -485,14 +489,11 @@ void draw_unicode_string(int x, int y, const char* string, sFONT* font, UWORD Co
                     if (FONT_BACKGROUND == Color_Background) { //this process is to speed up the scan
                         if (*ptr & (0x80 >> (column % 8)))
                             Paint_SetPixel(x + column, y + row, Color_Foreground);
-                        // Paint_DrawPoint(x + column, y + row, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
                     } else {
                         if (*ptr & (0x80 >> (column % 8))) {
                             Paint_SetPixel(x + column, y + row, Color_Foreground);
-                            // Paint_DrawPoint(x + column, y + row, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
                         } else {
                             Paint_SetPixel(x + column, y + row, Color_Background);
-                            // Paint_DrawPoint(x + column, y + row, Color_Background, DOT_PIXEL_DFT, DOT_STYLE_DFT);
                         }
                     }
                     //One pixel is 8 bits
@@ -506,13 +507,11 @@ void draw_unicode_string(int x, int y, const char* string, sFONT* font, UWORD Co
 
         x += font->Width;
 
-
-        string += cp.byte_length;
-        length += 1;
+        if (x + font->Width > EPD_2IN9_V2_WIDTH) {
+            x = initial_x;
+            y += font->Height;
+        }
     }
-
-    printf("draw_unicode_char drew %u glyphs\n", length);
-
 }
 
 void display_message(const char* message) {
@@ -522,8 +521,8 @@ void display_message(const char* message) {
         Paint_SelectImage(BlackImage);
         Paint_Clear(WHITE);
 
-        Paint_DrawString_EN(5, 50, message, &Font12,       WHITE, BLACK);
-        draw_unicode_string(5, 80, message, &unicode_font, WHITE, BLACK);
+        /* Paint_DrawString_EN(5, 50, message, &Font12,       WHITE, BLACK); */
+        draw_unicode_string(5, 50, message, &unicode_font, WHITE, BLACK);
         // display_utf8_string(5, 50, message, &UTF8_Font12, WHITE, BLACK);
 
         EPD_2IN9_V2_Display_Base(BlackImage);
