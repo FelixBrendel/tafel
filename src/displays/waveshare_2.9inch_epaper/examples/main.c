@@ -224,6 +224,16 @@ int init_font() {
         }
 
         printf("width: %d, height: %d\n", w, h);
+
+
+        int adv_x;
+        int left_bearing;
+        stbtt_GetCodepointHMetrics(&font, codepoint, &adv_x, &left_bearing);
+
+        float f_adv_x = adv_x * font_scale;
+        float f_left_bearing = left_bearing * font_scale;
+
+        printf("advance x: %f left_bearing: %f\n", f_adv_x, f_left_bearing);
     };
 
     test('a');
@@ -258,6 +268,10 @@ int init_font() {
         float f_line_gap = line_gap * font_scale;
 
         printf("ascend: %f, descend: %f, line gap %f\n", f_ascend, f_descend, f_line_gap);
+    }
+
+    {
+
     }
 
     return 0;
