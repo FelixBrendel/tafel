@@ -247,7 +247,7 @@ int init_font() {
 
     printf("total_byte_size : %i\n", total_byte_size);
 
-    for (int cp = 'g'; cp <= 'j'; ++cp) {
+    for (int cp = 'h'; cp <= 'j'; ++cp) {
         printf("Generating letter for cp: %i\n", cp);
 
         int bmp_width_in_px;
