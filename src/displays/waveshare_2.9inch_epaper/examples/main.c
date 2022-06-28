@@ -218,7 +218,7 @@ int init_font() {
     int   unicode_map_end   = 0xff;
     int   unicode_map_size  = unicode_map_end - unicode_map_start+1;
 
-    int   char_height_in_px = 50;
+    int   char_height_in_px = 100;
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
     stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
@@ -295,14 +295,16 @@ int init_font() {
                "x end  : %d\n"
                "y end  : %d\n", x_start, y_start, x_end, y_end);
 
-        uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0))];
+        int bytes_per_line = (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0));
+
+        uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * bytes_per_line];
 
         printf("original ptr: %lu\n", bit_ptr-font_data);
 
-        bit_ptr += y_start * (int)ceil(bmp_width_in_px/8.0);
+        bit_ptr += y_start * bytes_per_line;
 
         printf("ptr + y: %lu\n", bit_ptr-font_data);
-        /* bit_ptr += x_start / 8; */
+        bit_ptr += x_start / 8;
 
         printf("ptr + x: %lu\n", bit_ptr-font_data);
         int shift = 7-(x_start % 8);
@@ -331,7 +333,7 @@ int init_font() {
                 /* ++bit_ptr; */
 
             bit_ptr += (int)((char_width_in_px-x_end) / 8.0);
-            /* bit_ptr += (int)(x_start/8.0); */
+            bit_ptr += (int)(x_start/8.0);
 
             shift = 7-(x_start % 8);
         }
