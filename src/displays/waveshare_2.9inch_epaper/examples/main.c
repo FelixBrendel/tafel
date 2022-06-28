@@ -212,13 +212,25 @@ int init_font() {
     fclose(font_file);
 
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
-    bitmap = stbtt_GetCodepointBitmap(&font, 0,stbtt_ScaleForPixelHeight(&font, s), c, &w, &h, 0,0);
 
-    for (j=0; j < h; ++j) {
-        for (i=0; i < w; ++i)
-            putchar(" .:ioVM@"[bitmap[j*w+i]>>5]);
-        putchar('\n');
+    auto test = [&](int codepoint) {
+        bitmap = stbtt_GetCodepointBitmap(&font, 0,stbtt_ScaleForPixelHeight(&font, s), codepoint, &w, &h, 0,0);
+
+        for (j=0; j < h; ++j) {
+            for (i=0; i < w; ++i)
+                putchar(" .:ioVM@"[bitmap[j*w+i]>>5]);
+            putchar('\n');
+        }
+
+        printf("width: %d, height: %d\n", w, h);
     }
+
+    test('a');
+    test('W');
+    test('@');
+    test('/');
+    test(0xe4);// ü
+
     return 0;
 }
 
