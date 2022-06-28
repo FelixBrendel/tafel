@@ -223,7 +223,7 @@ int init_fonts() {
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
 
     int   unicode_map_start = 0x0000;
-    int   unicode_map_end   = 0xac00;
+    int   unicode_map_end   = 0xacff;
     int   unicode_map_size  = unicode_map_end - unicode_map_start + 1;
 
     int   char_height_in_px = 30;
@@ -298,7 +298,7 @@ int init_fonts() {
         }
     };
 
-    for (int cp = unicode_map_start; cp <= unicode_map_end; ++cp) {
+    for (int cp = 0xac00; cp <= 0xacff; ++cp) {
         printf("Generating letter for cp: %i\n", cp);
 
         int bmp_width_in_px;
