@@ -319,8 +319,10 @@ int init_font() {
 
         printf("shift: %i\n", shift);
 
-        for (int y = max(0, y_start); y < min(y_end, char_height_in_px); ++y) {
-            for (int x = max(0, x_start); x < min(x_end, char_width_in_px); ++x) {
+        int y;
+        for (y = max(0, y_start); y < min(y_end, char_height_in_px); ++y) {
+            int x;
+            for (x = max(0, x_start); x < min(x_end, char_width_in_px); ++x) {
                 uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
                 uint8_t bit   = pixel >= 0x01;
 
@@ -341,8 +343,8 @@ int init_font() {
             /* if ((x_offset+bmp_width_in_px) % 8 != 0) */
                 /* ++bit_ptr; */
 
-            bit_ptr += (int)((char_width_in_px-(x_end+1)) >> 3) + (char_width_in_px % 8 != 0);
-            printf(" -- to end of line : %i -- ", (int)((char_width_in_px-(x_end+1)) >> 3) + (char_width_in_px % 8 != 0));
+            bit_ptr += (int)((char_width_in_px-x) >> 3) + (char_width_in_px % 8 != 0);
+            printf(" -- to end of line : %i -- ", (int)((char_width_in_px-x) >> 3) + (char_width_in_px % 8 != 0));
             bit_ptr += (int)(x_start/8.0);
             printf("to start in new line: %i \n", (int)(x_start/8.0));
             printf("x_start: %i\n", x_start);
