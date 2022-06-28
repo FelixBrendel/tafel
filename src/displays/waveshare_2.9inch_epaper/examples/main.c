@@ -11,7 +11,7 @@
 #include "EPD_2in9_V2.h"
 
 #include "../../display.h"
-#include "../../../utf-8.cpp"
+#include "../../../utf-8.hpp"
 
 #include "stb_truetype.h"
 
