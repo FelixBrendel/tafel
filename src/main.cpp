@@ -179,7 +179,7 @@ int main() {
     init_display();
     defer { deinit_display(); };
 
-    display_message("g");
+    display_message("h");
     return 0;
 
     char db_client_id[33];
