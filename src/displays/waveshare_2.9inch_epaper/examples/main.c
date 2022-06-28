@@ -196,6 +196,14 @@ int demo() {
     }
 }
 
+static inline int min(int a, int b) {
+    return a < b ? a : b;
+}
+
+static inline int max(int a, int b) {
+    return a > b ? a : b;
+}
+
 int init_font() {
     display_message("initting font");
     unsigned char* ttf_buffer = (unsigned char*)malloc(1<<25);
@@ -311,8 +319,8 @@ int init_font() {
 
         printf("shift: %i\n", shift);
 
-        for (int y = y_start; y < y_end; ++y) {
-            for (int x = x_start; x < x_end; ++x) {
+        for (int y = max(0, y_start); y < min(y_end, char_height_in_px); ++y) {
+            for (int x = max(0, x_start); x < min(x_end, char_width_in_px); ++x) {
                 uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
                 uint8_t bit   = pixel >= 0x01;
 
