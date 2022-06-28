@@ -300,7 +300,7 @@ int init_font() {
         printf("original ptr: %lu\n", bit_ptr-font_data);
 
         /* bit_ptr += y_start * ((bmp_width_in_px % 8 == 0) ? bmp_width_in_px/8 : bmp_width_in_px/8 + 1) + 1; */
-        bit_ptr += y_start * (int)ceil(bmp_width_in_px/8.0)
+        bit_ptr += y_start * (int)ceil(bmp_width_in_px/8.0);
 
         printf("ptr + y: %lu\n", bit_ptr-font_data);
         bit_ptr += x_start / 8;
