@@ -231,6 +231,15 @@ int init_font() {
     test('/');
     test(0xe4);// ü
 
+    {
+        int bb_x0;
+        int bb_x1;
+        int bb_y0;
+        int bb_y1;
+        stbtt_GetFontBoundingBox(&font, &bb_x0, &bb_y0, &bb_x1, &bb_y1);
+        printf("bounding box: %d %d %d %d\n", bb_x0, bb_y0, bb_x1, bb_y1);
+    }
+
     return 0;
 }
 
