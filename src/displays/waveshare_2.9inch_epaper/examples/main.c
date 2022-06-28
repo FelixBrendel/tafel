@@ -199,7 +199,7 @@ int init_font() {
 
     stbtt_fontinfo font;
     unsigned char *bitmap;
-    int w,h,i,j,c = 'a', s = 50;
+    int w,h,i,j, s = 50;
 
     FILE* font_file = fopen("./Sono-Medium.ttf", "rb");
     if (!font_file) {
@@ -252,12 +252,12 @@ int init_font() {
         int descend;
         int line_gap;
         stbtt_GetFontVMetrics(&font, &ascend, &descend, &line_gap);
-        /* float fbb_x0 = bb_x0 * font_scale; */
-        /* float fbb_x1 = bb_x1 * font_scale; */
-        /* float fbb_y0 = bb_y0 * font_scale; */
-        /* float fbb_y1 = bb_y1 * font_scale; */
 
-        printf("ascend: %i, descend: %i, line gap %i\n", ascend, descend, line_gap);
+        float f_ascend = ascend * font_scale;
+        float f_descend = descend * font_scale;
+        float f_line_gap = line_gap * font_scale;
+
+        printf("ascend: %f, descend: %f, line gap %f\n", f_ascend, f_descend, f_line_gap);
     }
 
     return 0;
