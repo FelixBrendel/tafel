@@ -326,7 +326,7 @@ int init_font() {
             }
 
             if (shift != 7) {
-                printf("go next")
+                printf("go next");
                 ++bit_ptr;
             }
 
