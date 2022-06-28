@@ -202,7 +202,14 @@ int init_font() {
     unsigned char *bitmap;
     int w,h,i,j,c = 'a', s = 20;
 
-    fread(ttf_buffer, 1, 1<<25, fopen("Sono-Medium.ttf", "rb"));
+    FILE* font_file = fopen("./Sono-Medium.ttf", "rb");
+    if (!font_file) {
+        fprintf(stderr, "could not open ttf file");
+        return 1;
+    }
+
+    fread(ttf_buffer, 1, 1<<25, font_file);
+    fclose(font_file);
 
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
     bitmap = stbtt_GetCodepointBitmap(&font, 0,stbtt_ScaleForPixelHeight(&font, s), c, &w, &h, 0,0);
