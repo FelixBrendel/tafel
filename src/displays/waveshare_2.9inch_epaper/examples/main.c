@@ -247,6 +247,19 @@ int init_font() {
         printf("bounding box: %f %f %f %f\n", fbb_x0, fbb_y0, fbb_x1, fbb_y1);
     }
 
+    {
+        int ascend;
+        int descend;
+        int line_gap;
+        stbtt_GetFontVMetrics(&font, &ascend, &descend, &line_gap);
+        /* float fbb_x0 = bb_x0 * font_scale; */
+        /* float fbb_x1 = bb_x1 * font_scale; */
+        /* float fbb_y0 = bb_y0 * font_scale; */
+        /* float fbb_y1 = bb_y1 * font_scale; */
+
+        printf("ascend: %i, descend: %i, line gap %i\n", ascend, descend, line_gap);
+    }
+
     return 0;
 }
 
