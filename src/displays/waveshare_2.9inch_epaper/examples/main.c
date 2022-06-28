@@ -336,8 +336,8 @@ int init_font() {
                 }
             }
 
-            bit_ptr += (int)((bytes_per_line*8-x-1) >> 3) + (char_width_in_px % 8 != 0);
-            printf(" -- to end of line : %i -- ", (int)((bytes_per_line*8 - x -1) >> 3) + (char_width_in_px % 8 != 0));
+            bit_ptr += (int)((bytes_per_line*8-x-1) / 8) + 1;
+            printf(" -- to end of line : %i -- ", (int)((bytes_per_line*8 - x -1) / 8) + 1);
             bit_ptr += (int)(x_start/8.0);
             printf("to start in new line: %i \n", (int)(x_start/8.0));
             printf("x_start: %i\n", x_start);
