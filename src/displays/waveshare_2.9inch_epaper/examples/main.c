@@ -346,6 +346,7 @@ int init_font() {
                             printf("  ");
                         }
                     }
+                    printf("|");
                     ++bit_ptr;
                 }
                 printf("\n");
