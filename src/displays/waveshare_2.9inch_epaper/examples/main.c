@@ -222,8 +222,8 @@ int init_fonts() {
 
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
 
-    int   unicode_map_start = 0;
-    int   unicode_map_end   = 0xff;
+    int   unicode_map_start = 0xac00;
+    int   unicode_map_end   = 0xacff;
     int   unicode_map_size  = unicode_map_end - unicode_map_start+1;
 
     int   char_height_in_px = 30;
