@@ -429,7 +429,7 @@ int init_display () {
     Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
     Paint_Clear(WHITE);
 
-    init_font();
+    init_fonts();
 
     return 0;
 }
@@ -470,7 +470,6 @@ int display_wake_up() {
 
 void draw_unicode_string(int x, int y, const char* string, sFONT* font, UWORD Color_Background, UWORD Color_Foreground) {
     int initial_x = x;
-    int initial_y = y;
 
     while (*string) {
         UTF_8_Code_Point cp = bytes_to_code_point((const byte*)string);
