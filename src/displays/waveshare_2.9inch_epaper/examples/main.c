@@ -307,8 +307,7 @@ int init_font() {
         bit_ptr += x_start / 8;
 
         printf("ptr + x: %lu\n", bit_ptr-font_data);
-        typedef int inz;
-        inz shift = 7-(x_start % 8);
+        int shift = 7-(x_start % 8);
 
         printf("shift: %i\n", shift);
 
@@ -333,9 +332,9 @@ int init_font() {
             if ((x_offset+bmp_width_in_px) % 8 != 0)
                 ++bit_ptr;
 
-            bit_ptr += (int)ceil((char_width_in_px-x_end) / 8.0);
+            bit_ptr += (int)((char_width_in_px-x_end) / 8.0);
 
-            bit_ptr += x_start/8;
+            bit_ptr += (int)ceil(x_start/8.0);
             shift = 7-(x_start % 8);
         }
 
