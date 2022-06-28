@@ -12,6 +12,9 @@
 
 #include "../../display.h"
 
+#define STB_TRUETYPE_IMPLEMENTATION
+#include "stb_truetype.h"
+
 #define array_length(arr) sizeof((arr))/sizeof((arr)[0])
 
  /* EPD_2IN9_V2_WIDTH  :: 128 */
@@ -191,6 +194,27 @@ int demo() {
     }
 }
 
+int init_font() {
+    display_message("initting font");
+    char ttf_buffer[1<<25];
+
+    stbtt_fontinfo font;
+    unsigned char *bitmap;
+    int w,h,i,j,c = 'a', s = 20;
+
+    fread(ttf_buffer, 1, 1<<25, fopen("Sono-Medium.ttf", "rb"));
+
+    stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
+    bitmap = stbtt_GetCodepointBitmap(&font, 0,stbtt_ScaleForPixelHeight(&font, s), c, &w, &h, 0,0);
+
+    for (j=0; j < h; ++j) {
+        for (i=0; i < w; ++i)
+            putchar(" .:ioVM@"[bitmap[j*w+i]>>5]);
+        putchar('\n');
+    }
+    return 0;
+}
+
 int init_display () {
     printf("EPD_2IN9_V2_test Demo\r\n");
     //Create a new image cache
@@ -204,9 +228,7 @@ int init_display () {
     Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
     Paint_Clear(WHITE);
 
-    display_message("initting font");
-
-    
+    init_font();
 
     return 0;
 }
