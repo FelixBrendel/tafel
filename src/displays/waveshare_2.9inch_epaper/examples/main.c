@@ -281,7 +281,7 @@ int init_font() {
 
         printf("ptr + x: %lu\n", bit_ptr-font_data);
 
-        unsigned char shift = 7-(x_start % 8);
+        char shift = 7-(x_start % 8);
 
         printf("shift: %i\n", shift);
 
@@ -293,7 +293,7 @@ int init_font() {
                 *bit_ptr |= (bit << shift);
 
                 --shift;
-                if (shift == 0) {
+                if (shift == -1) {
                     shift = 7;
                     ++bit_ptr;
                 }
