@@ -179,7 +179,8 @@ int main() {
     init_display();
     defer { deinit_display(); };
 
-    display_message("Loading");
+    display_message("g");
+    return 0;
 
     char db_client_id[33];
     char db_client_secret[33];
