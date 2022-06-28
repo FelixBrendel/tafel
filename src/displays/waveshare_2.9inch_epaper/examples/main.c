@@ -274,7 +274,7 @@ int init_font() {
 
     };
 
-    for (int cp = 0; cp <= 0; ++cp) {
+    for (int cp = unicode_map_start; cp <= unicode_map_end; ++cp) {
         printf("Generating letter for cp: %i\n", cp);
 
         int bmp_width_in_px;
