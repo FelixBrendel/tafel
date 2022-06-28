@@ -506,7 +506,7 @@ void draw_unicode_string(int x, int y, const char* string, sFONT* font, UWORD Co
 
         x += font->Width;
 
-        if (x + font->Width > EPD_2IN9_V2_WIDTH) {
+        if (x + font->Width > EPD_2IN9_V2_HEIGHT) {
             x = initial_x;
             y += font->Height;
         }
