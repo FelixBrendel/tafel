@@ -179,7 +179,7 @@ int main() {
     init_display();
     defer { deinit_display(); };
 
-    display_message("hëllo Wörld long meßage Test");
+    display_message("가가각");
     return 0;
 
     char db_client_id[33];
