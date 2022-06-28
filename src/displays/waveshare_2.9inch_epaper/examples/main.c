@@ -281,7 +281,7 @@ int init_font() {
 
         printf("ptr + x: %lu\n", bit_ptr-font_data);
 
-        unsigned char shift = x_start % 8;
+        unsigned char shift = 7-(x_start % 8);
 
         printf("shift: %i\n", shift);
 
@@ -290,21 +290,21 @@ int init_font() {
                 uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
                 uint8_t bit   = pixel >= 0x80;
 
-                *bit_ptr |= (bit << (shift));
+                *bit_ptr |= (bit << shift);
 
-                ++shift;
-                if (shift == 8) {
-                    shift = 0;
+                --shift;
+                if (shift == 0) {
+                    shift = 7;
                     ++bit_ptr;
                 }
             }
             if (unicode_font.Width % 8 != 0)
                 ++bit_ptr;
 
-            bit_ptr += (int)ceil((char_width_in_px-x_end) / 8.0);
+            bit_ptr += (int)((char_width_in_px-x_end) / 8.0);
 
             bit_ptr += x_start/8;
-            shift = x_start % 8;
+            shift = 7-(x_start % 8);
         }
 
 
