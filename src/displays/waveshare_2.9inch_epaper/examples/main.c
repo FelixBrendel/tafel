@@ -299,11 +299,10 @@ int init_font() {
 
         printf("original ptr: %lu\n", bit_ptr-font_data);
 
-        /* bit_ptr += y_start * ((bmp_width_in_px % 8 == 0) ? bmp_width_in_px/8 : bmp_width_in_px/8 + 1) + 1; */
         bit_ptr += y_start * (int)ceil(bmp_width_in_px/8.0);
 
         printf("ptr + y: %lu\n", bit_ptr-font_data);
-        bit_ptr += x_start / 8;
+        /* bit_ptr += x_start / 8; */
 
         printf("ptr + x: %lu\n", bit_ptr-font_data);
         int shift = 7-(x_start % 8);
@@ -332,7 +331,7 @@ int init_font() {
                 /* ++bit_ptr; */
 
             bit_ptr += (int)((char_width_in_px-x_end) / 8.0);
-            bit_ptr += (int)(x_start/8.0);
+            /* bit_ptr += (int)(x_start/8.0); */
 
             shift = 7-(x_start % 8);
         }
