@@ -250,18 +250,18 @@ int init_font() {
     for (int cp = 'g'; cp <= 'g'; ++cp) {
         printf("Generating letter for cp: %i\n", cp);
 
-        int width;
+        int bmp_width_in_px;
         int height;
         int x_offset;
         int y_offset;
 
         bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, cp,
-                                          &width, &height, &x_offset, &y_offset);
+                                          &bmp_width_in_px, &height, &x_offset, &y_offset);
 
         int y_start = ascend+y_offset;
         int y_end   = ascend+y_offset+height;
         int x_start = x_offset;
-        int x_end   = x_offset+width;
+        int x_end   = x_offset+bmp_width_in_px;
 
         printf("x start: %d\n"
                "y start: %d\n"
@@ -272,11 +272,11 @@ int init_font() {
 
         printf("original ptr: %lu\n", bit_ptr-font_data);
 
-        bit_ptr += y_start * ((width % 8 == 0) ? width/8 : width/8 + 1);
+        bit_ptr += y_start * ((bmp_width_in_px % 8 == 0) ? bmp_width_in_px/8 : bmp_width_in_px/8 + 1);
 
         printf("ptr + y: %lu\n", bit_ptr-font_data);
 
-        // bit_ptr += y_start * (width/8 + (width % 8 == 0));
+        // bit_ptr += y_start * (bmp_width_in_px/8 + (bmp_width_in_px % 8 == 0));
         bit_ptr += x_start / 8;
 
         printf("ptr + x: %lu\n", bit_ptr-font_data);
@@ -287,7 +287,7 @@ int init_font() {
 
         for (int y = y_start; y < y_end; ++y) {
             for (int x = x_start; x < x_end; ++x) {
-                uint8_t pixel = bitmap[width*(y-y_start)+(x-x_start)];
+                uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
                 uint8_t bit   = pixel >= 0x80;
 
                 *bit_ptr |= (bit << shift);
@@ -300,6 +300,9 @@ int init_font() {
             }
             if (unicode_font.Width % 8 != 0)
                 ++bit_ptr;
+
+            bit_ptr += (int)ceil((char_width_in_px-x_end) / 8.0); 
+
             bit_ptr += x_start/8;
             shift = x_start % 8;
         }
