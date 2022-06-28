@@ -11,11 +11,13 @@
 #include "EPD_2in9_V2.h"
 
 #include "../../display.h"
+#include "../../../utf-8.cpp"
 
 #include "stb_truetype.h"
 
 #define array_length(arr) sizeof((arr))/sizeof((arr)[0])
 
+sFONT unicode_font;
  /* EPD_2IN9_V2_WIDTH  :: 128 */
  /* EPD_2IN9_V2_HEIGHT :: 296 */
 
@@ -225,6 +227,13 @@ int init_font() {
     int bytes_per_line = (char_width_in_px % 8 == 0) ? (char_width_in_px / 8) : ((char_width_in_px / 8) + 1);
 
     int total_byte_size = unicode_map_size * char_height_in_px * bytes_per_line;
+
+    /* sFONT pixel_font; */
+    unicode_font.Width  = char_width_in_px;
+    unicode_font.Height = char_height_in_px;
+    unicode_font.table  = (uint8_t*)malloc(total_byte_size);
+    memset((void*)unicode_font.table, 0xf0, total_byte_size);
+
     printf("total_byte_size : %i\n", total_byte_size);
 
 
@@ -349,6 +358,49 @@ int display_wake_up() {
     return 0;
 }
 
+void draw_unicode_string(int x, int y, const char* string, sFONT* font, UWORD Color_Background, UWORD Color_Foreground) {
+    while (*string) {
+        UTF_8_Code_Point cp = bytes_to_code_point((const byte*)string);
+        u32 code_point = cp.code_point;
+        // draw one char
+        {
+            uint32_t char_offset = code_point * font->Height * (font->Width / 8 + (font->Width % 8 ? 1 : 0));
+            const unsigned char *ptr = &font->table[char_offset];
+
+            for (int row = 0; row < font->Height; row ++ ) {
+                for (int column = 0; column < font->Width; column ++ ) {
+
+                    //To determine whether the font background color and screen background color is consistent
+                    if (FONT_BACKGROUND == Color_Background) { //this process is to speed up the scan
+                        if (*ptr & (0x80 >> (column % 8)))
+                            Paint_SetPixel(x + column, y + row, Color_Foreground);
+                        // Paint_DrawPoint(x + column, y + row, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
+                    } else {
+                        if (*ptr & (0x80 >> (column % 8))) {
+                            Paint_SetPixel(x + column, y + row, Color_Foreground);
+                            // Paint_DrawPoint(x + column, y + row, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
+                        } else {
+                            Paint_SetPixel(x + column, y + row, Color_Background);
+                            // Paint_DrawPoint(x + column, y + row, Color_Background, DOT_PIXEL_DFT, DOT_STYLE_DFT);
+                        }
+                    }
+                    //One pixel is 8 bits
+                    if (column % 8 == 7)
+                        ptr++;
+                }// Write a line
+                if (font->Width % 8 != 0)
+                    ptr++;
+            }
+        }
+
+        x += font->Width;
+
+
+        string += cp.byte_length;
+    }
+
+}
+
 void display_message(const char* message) {
     display_wake_up();
     {
@@ -356,7 +408,8 @@ void display_message(const char* message) {
         Paint_SelectImage(BlackImage);
         Paint_Clear(WHITE);
 
-        Paint_DrawString_EN(5, 50, message, &Font12, WHITE, BLACK);
+        Paint_DrawString_EN(5, 50, message, &Font12,       WHITE, BLACK);
+        draw_unicode_string(5, 80, message, &unicode_font, WHITE, BLACK);
         // display_utf8_string(5, 50, message, &UTF8_Font12, WHITE, BLACK);
 
         EPD_2IN9_V2_Display_Base(BlackImage);

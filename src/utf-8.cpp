@@ -1,8 +1,6 @@
 #include "utf-8.hpp"
 
 UTF_8_Code_Point bytes_to_code_point(const byte* b) {
-    UTF_8_Code_Point cp;
-
     if ((*b & 0b10000000) == 0) {
         // ascii
         return {
