@@ -251,15 +251,15 @@ int init_font() {
         printf("Generating letter for cp: %i\n", cp);
 
         int bmp_width_in_px;
-        int height;
+        int bmp_height_in_px;
         int x_offset;
         int y_offset;
 
         bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, cp,
-                                          &bmp_width_in_px, &height, &x_offset, &y_offset);
+                                          &bmp_width_in_px, &bmp_height_in_px, &x_offset, &y_offset);
 
         int y_start = ascend+y_offset;
-        int y_end   = ascend+y_offset+height;
+        int y_end   = ascend+y_offset+bmp_height_in_px;
         int x_start = x_offset;
         int x_end   = x_offset+bmp_width_in_px;
 
@@ -288,7 +288,7 @@ int init_font() {
         for (int y = y_start; y < y_end; ++y) {
             for (int x = x_start; x < x_end; ++x) {
                 uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
-                uint8_t bit   = pixel >= 0x80;
+                uint8_t bit   = pixel >= 1
 
                 *bit_ptr |= (bit << (7-shift));
 
