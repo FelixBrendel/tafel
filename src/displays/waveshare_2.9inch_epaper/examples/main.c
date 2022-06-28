@@ -326,6 +326,7 @@ int init_font() {
             }
 
             if (shift != 7) {
+                printf("go next")
                 ++bit_ptr;
             }
 
@@ -333,9 +334,9 @@ int init_font() {
                 /* ++bit_ptr; */
 
             bit_ptr += (int)((char_width_in_px-x_end) / 8.0);
-            printf("to end of line      : %i", (int)((char_width_in_px-x_end) / 8.0));
+            printf(" -- to end of line : %i -- ", (int)((char_width_in_px-x_end) / 8.0));
             bit_ptr += (int)(x_start/8.0);
-            printf("to start in new line: %i", (int)(x_start/8.0));
+            printf("to start in new line: %i\n", (int)(x_start/8.0));
 
             shift = 7-(x_start % 8);
         }
