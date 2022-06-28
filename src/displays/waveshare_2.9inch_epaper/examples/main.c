@@ -211,7 +211,7 @@ int init_fonts() {
     stbtt_fontinfo font;
     unsigned char *bitmap;
 
-    FILE* font_file = fopen("./Sono-Medium.ttf", "rb");
+    FILE* font_file = fopen("./fonts/NanumGothicCoding-Regular.ttf", "rb");
     if (!font_file) {
         fprintf(stderr, "could not open ttf file");
         return 1;
