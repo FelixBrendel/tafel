@@ -307,8 +307,8 @@ int init_font() {
         bit_ptr += x_start / 8;
 
         printf("ptr + x: %lu\n", bit_ptr-font_data);
-
-        char shift = 7-(x_start % 8);
+        typedef int inz;
+        inz shift = 7-(x_start % 8);
 
         printf("shift: %i\n", shift);
 
