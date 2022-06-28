@@ -269,20 +269,20 @@ int init_font() {
 
         uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0))];
 
-        printf("original ptr: %lu", bit_ptr-font_data);
+        printf("original ptr: %lu\n", bit_ptr-font_data);
 
         bit_ptr += y_start * ((width % 8 == 0) ? width/8 : width/8 + 1);
 
-        printf("ptr + y: %lu", bit_ptr-font_data);
+        printf("ptr + y: %lu\n", bit_ptr-font_data);
 
         // bit_ptr += y_start * (width/8 + (width % 8 == 0));
         bit_ptr += x_start / 8;
 
-        printf("ptr + x: %lu", bit_ptr-font_data);
+        printf("ptr + x: %lu\n", bit_ptr-font_data);
 
         unsigned char shift = x_start % 8;
 
-        printf("shift: %i", shift);
+        printf("shift: %i\n", shift);
 
         for (int y = y_start; y < y_end; ++y) {
             for (int x = x_start; x < x_end; ++x) {
@@ -308,72 +308,72 @@ int init_font() {
     }
 
 
-    auto test = [&](int codepoint) {
+    /* auto test = [&](int codepoint) { */
 
-        int w,h,i,j;
-        int x_offset;
-        int y_offset;
-        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, &x_offset, &y_offset);
+    /*     int w,h,i,j; */
+    /*     int x_offset; */
+    /*     int y_offset; */
+    /*     bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, &x_offset, &y_offset); */
 
-        for (j=0; j < h; ++j) {
-            for (i=0; i < w; ++i)
-                putchar(" .:ioVM@"[bitmap[j*w+i]>>5]);
-            putchar('\n');
-        }
+    /*     for (j=0; j < h; ++j) { */
+    /*         for (i=0; i < w; ++i) */
+    /*             putchar(" .:ioVM@"[bitmap[j*w+i]>>5]); */
+    /*         putchar('\n'); */
+    /*     } */
 
-        printf("width: %d, height: %d\n", w, h);
-        printf("x_offset: %d y_offset: %d\n", x_offset, y_offset);
+    /*     printf("width: %d, height: %d\n", w, h); */
+    /*     printf("x_offset: %d y_offset: %d\n", x_offset, y_offset); */
 
 
-        int adv_x;
-        int left_bearing;
-        stbtt_GetCodepointHMetrics(&font, codepoint, &adv_x, &left_bearing);
+    /*     int adv_x; */
+    /*     int left_bearing; */
+    /*     stbtt_GetCodepointHMetrics(&font, codepoint, &adv_x, &left_bearing); */
 
-        float f_adv_x = adv_x * font_scale;
-        float f_left_bearing = left_bearing * font_scale;
-        printf("advance x: %f left_bearing: %f\n", f_adv_x, f_left_bearing);
+    /*     float f_adv_x = adv_x * font_scale; */
+    /*     float f_left_bearing = left_bearing * font_scale; */
+    /*     printf("advance x: %f left_bearing: %f\n", f_adv_x, f_left_bearing); */
 
-    };
+    /* }; */
 
-    test(2);
-    test('a');
-    test('W');
-    test('@');
-    test('/');
-    test(0xe4);// ü
-    test('g');// ü
+    /* test(2); */
+    /* test('a'); */
+    /* test('W'); */
+    /* test('@'); */
+    /* test('/'); */
+    /* test(0xe4);// ü */
+    /* test('g');// ü */
 
-    {
-        int bb_x0;
-        int bb_x1;
-        int bb_y0;
-        int bb_y1;
-        stbtt_GetFontBoundingBox(&font, &bb_x0, &bb_y0, &bb_x1, &bb_y1);
+    /* { */
+    /*     int bb_x0; */
+    /*     int bb_x1; */
+    /*     int bb_y0; */
+    /*     int bb_y1; */
+    /*     stbtt_GetFontBoundingBox(&font, &bb_x0, &bb_y0, &bb_x1, &bb_y1); */
 
-        float fbb_x0 = bb_x0 * font_scale;
-        float fbb_x1 = bb_x1 * font_scale;
-        float fbb_y0 = bb_y0 * font_scale;
-        float fbb_y1 = bb_y1 * font_scale;
+    /*     float fbb_x0 = bb_x0 * font_scale; */
+    /*     float fbb_x1 = bb_x1 * font_scale; */
+    /*     float fbb_y0 = bb_y0 * font_scale; */
+    /*     float fbb_y1 = bb_y1 * font_scale; */
 
-        printf("bounding box: %f %f %f %f\n", fbb_x0, fbb_y0, fbb_x1, fbb_y1);
-    }
+    /*     printf("bounding box: %f %f %f %f\n", fbb_x0, fbb_y0, fbb_x1, fbb_y1); */
+    /* } */
 
-    {
-        int ascend;
-        int descend;
-        int line_gap;
-        stbtt_GetFontVMetrics(&font, &ascend, &descend, &line_gap);
+    /* { */
+    /*     int ascend; */
+    /*     int descend; */
+    /*     int line_gap; */
+    /*     stbtt_GetFontVMetrics(&font, &ascend, &descend, &line_gap); */
 
-        float f_ascend = ascend * font_scale;
-        float f_descend = descend * font_scale;
-        float f_line_gap = line_gap * font_scale;
+    /*     float f_ascend = ascend * font_scale; */
+    /*     float f_descend = descend * font_scale; */
+    /*     float f_line_gap = line_gap * font_scale; */
 
-        printf("ascend: %f, descend: %f, line gap %f\n", f_ascend, f_descend, f_line_gap);
-    }
+    /*     printf("ascend: %f, descend: %f, line gap %f\n", f_ascend, f_descend, f_line_gap); */
+    /* } */
 
-    {
+    /* { */
 
-    }
+    /* } */
 
     return 0;
 }
