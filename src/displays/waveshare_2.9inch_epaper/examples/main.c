@@ -274,7 +274,7 @@ int init_font() {
 
     };
 
-    for (int cp = unicode_map_start; cp <= unicode_map_end; ++cp) {
+    for (int cp = 0; cp <= 0; ++cp) {
         printf("Generating letter for cp: %i\n", cp);
 
         int bmp_width_in_px;
@@ -333,7 +333,9 @@ int init_font() {
                 /* ++bit_ptr; */
 
             bit_ptr += (int)((char_width_in_px-x_end) / 8.0);
+            printf("to end of line      : %i", (int)((char_width_in_px-x_end) / 8.0));
             bit_ptr += (int)(x_start/8.0);
+            printf("to start in new line: %i", (int)(x_start/8.0));
 
             shift = 7-(x_start % 8);
         }
