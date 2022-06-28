@@ -2,6 +2,7 @@
 #include <signal.h>  // signal()
 #include <stdlib.h>  // exit() malloc() free()
 #include <stdint.h>
+#include <math.h>
 
 #include "DEV_Config.h"
 #include "GUI_Paint.h"
@@ -222,6 +223,7 @@ int init_font() {
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
     stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
+    char_width_in_px = ceil(char_width_in_px*font_scale);
 
     // get number of bytes per pixel line per char
     int bytes_per_line = (char_width_in_px % 8 == 0) ? (char_width_in_px / 8) : ((char_width_in_px / 8) + 1);
@@ -232,7 +234,7 @@ int init_font() {
     unicode_font.Width  = char_width_in_px;
     unicode_font.Height = char_height_in_px;
     unicode_font.table  = (uint8_t*)malloc(total_byte_size);
-    memset((void*)unicode_font.table, 0xf0, total_byte_size);
+    memset((void*)unicode_font.table, 0x81, total_byte_size);
 
     printf("total_byte_size : %i\n", total_byte_size);
 
