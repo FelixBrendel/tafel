@@ -200,7 +200,7 @@ int init_font() {
 
     stbtt_fontinfo font;
     unsigned char *bitmap;
-    int w,h,i,j,c = 'a', s = 20;
+    int w,h,i,j,c = 'a', s = 50;
 
     FILE* font_file = fopen("./Sono-Medium.ttf", "rb");
     if (!font_file) {
