@@ -229,7 +229,7 @@ int init_fonts() {
     int   char_height_in_px = 30;
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
-    stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
+    stbtt_GetCodepointHMetrics(&font, 0xac00, &char_width_in_px, NULL);
     char_width_in_px = ceil(char_width_in_px*font_scale);
 
     printf("generating font for width: %i height: %i\n", char_width_in_px, char_height_in_px);
