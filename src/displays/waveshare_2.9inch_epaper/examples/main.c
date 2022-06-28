@@ -202,7 +202,6 @@ int init_font() {
 
     stbtt_fontinfo font;
     unsigned char *bitmap;
-    int w,h,i,j;
 
     FILE* font_file = fopen("./Sono-Medium.ttf", "rb");
     if (!font_file) {
@@ -225,22 +224,77 @@ int init_font() {
     stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
     char_width_in_px = ceil(char_width_in_px*font_scale);
 
+
+    int ascend;
+    int descend;
+    int line_gap;
+    stbtt_GetFontVMetrics(&font, &ascend, &descend, &line_gap);
+    ascend = (int)(ascend*font_scale +.5f);
+    descend = char_height_in_px - ascend;
+
     // get number of bytes per pixel line per char
     int bytes_per_line = (char_width_in_px % 8 == 0) ? (char_width_in_px / 8) : ((char_width_in_px / 8) + 1);
 
     int total_byte_size = unicode_map_size * char_height_in_px * bytes_per_line;
+    uint8_t* font_data = (uint8_t*)malloc(total_byte_size);
 
     /* sFONT pixel_font; */
     unicode_font.Width  = char_width_in_px;
     unicode_font.Height = char_height_in_px;
-    unicode_font.table  = (uint8_t*)malloc(total_byte_size);
-    memset((void*)unicode_font.table, 0x81, total_byte_size);
+    unicode_font.table  = font_data;
+    memset((void*)unicode_font.table, 0, total_byte_size);
 
     printf("total_byte_size : %i\n", total_byte_size);
+
+    for (int cp = unicode_map_start; cp <= unicode_map_end; ++cp) {
+        printf("Generating letter for cp: %i\n", cp);
+
+        int width;
+        int height;
+        int x_offset;
+        int y_offset;
+
+        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, cp,
+                                          &width, &height, &x_offset, &y_offset);
+
+        int y_start = ascend+y_offset;
+        int y_end   = ascend+y_offset+height;
+        int x_start = x_offset;
+        int x_end   = x_offset+width;
+
+        uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0))];
+        bit_ptr += y_start * ((width % 8 == 0) ? width/8 : width/8 + 1);
+        // bit_ptr += y_start * (width/8 + (width % 8 == 0));
+        bit_ptr += x_start / 8;
+
+        unsigned char shift = x_start % 8;
+        for (int y = y_start; y < y_end; ++y) {
+            for (int x = x_start; x < x_end; ++x) {
+                uint8_t pixel = bitmap[width*(y-y_start)+(x-x_start)];
+                uint8_t bit   = pixel >= 0x80;
+
+                *bit_ptr |= (bit << shift);
+
+                ++shift;
+                if (shift == 8) {
+                    shift = 0;
+                    ++bit_ptr;
+                }
+            }
+            if (unicode_font.Width % 8 != 0)
+                ++bit_ptr;
+            bit_ptr += x_start/8;
+            shift = x_start % 8;
+        }
+
+
+
+    }
 
 
     auto test = [&](int codepoint) {
 
+        int w,h,i,j;
         int x_offset;
         int y_offset;
         bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, &x_offset, &y_offset);
