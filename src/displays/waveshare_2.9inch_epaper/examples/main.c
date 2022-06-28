@@ -337,8 +337,9 @@ int init_font() {
             printf(" -- to end of line : %i -- ", (int)((char_width_in_px-(x_end+x_offset)) >> 3));
             bit_ptr += (int)(x_start/8.0);
             printf("to start in new line: %i \n", (int)(x_start/8.0));
-            printf("char_width_in_px: %i\n", char_width_in_px);
+            printf("x_start: %i\n", x_start);
             printf("x_end: %i\n", x_end);
+            printf("char_width_in_px: %i\n", char_width_in_px);
 
             shift = 7-(x_start % 8);
         }
