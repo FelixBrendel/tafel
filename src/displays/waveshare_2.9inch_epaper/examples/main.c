@@ -226,7 +226,7 @@ int init_font() {
     int   unicode_map_end   = 0xff;
     int   unicode_map_size  = unicode_map_end - unicode_map_start+1;
 
-    int   char_height_in_px = 14;
+    int   char_height_in_px = 12;
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
     stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
@@ -304,6 +304,7 @@ int init_font() {
                "y end  : %d\n", x_start, y_start, x_end, y_end);
 
         int bytes_per_line = (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0));
+        printf("bytes-per-line: %i\n", bytes_per_line);
 
         uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * bytes_per_line];
 
