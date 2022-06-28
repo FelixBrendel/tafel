@@ -199,7 +199,7 @@ int init_font() {
 
     stbtt_fontinfo font;
     unsigned char *bitmap;
-    int w,h,i,j, s = 50;
+    int w,h,i,j;
 
     FILE* font_file = fopen("./Sono-Medium.ttf", "rb");
     if (!font_file) {
@@ -212,7 +212,15 @@ int init_font() {
 
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
 
-    float font_scale = stbtt_ScaleForPixelHeight(&font, s);
+    int   char_height_in_px = 50;
+    int   char_width_in_px;
+    float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
+    stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
+
+    // get number of bytes per pixel line per char
+    int bytes_per_line = (char_width_in_px % 8 == 0) ? (char_width_in_px / 8) : ((char_width_in_px / 8) + 1);
+
+
 
     auto test = [&](int codepoint) {
 
@@ -240,6 +248,7 @@ int init_font() {
 
     };
 
+    test(2);
     test('a');
     test('W');
     test('@');
