@@ -222,9 +222,9 @@ int init_fonts() {
 
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
 
-    int   unicode_map_start = 0xac00;
+    int   unicode_map_start = 0x0000;
     int   unicode_map_end   = 0xac00;
-    int   unicode_map_size  = unicode_map_end - unicode_map_start+1;
+    int   unicode_map_size  = unicode_map_end - unicode_map_start + 1;
 
     int   char_height_in_px = 30;
     int   char_width_in_px;
@@ -246,12 +246,12 @@ int init_fonts() {
 
     int total_byte_size = unicode_map_size * char_height_in_px * bytes_per_line;
     uint8_t* font_data = (uint8_t*)malloc(total_byte_size);
+    memset((void*)font_data, 0, total_byte_size);
 
     /* sFONT pixel_font; */
     unicode_font.Width  = char_width_in_px;
     unicode_font.Height = char_height_in_px;
     unicode_font.table  = font_data;
-    memset((void*)unicode_font.table, 0, total_byte_size);
 
     printf("total_byte_size : %i\n", total_byte_size);
 
