@@ -216,9 +216,9 @@ int init_font() {
 
     auto test = [&](int codepoint) {
 
-        int x_off;
-        int y_off;
-        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, &x_off, &y_off);
+        int x_offset;
+        int y_offset;
+        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, &x_offset, &y_offset);
 
         for (j=0; j < h; ++j) {
             for (i=0; i < w; ++i)
