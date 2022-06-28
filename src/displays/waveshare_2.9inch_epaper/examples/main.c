@@ -196,7 +196,7 @@ int demo() {
 
 int init_font() {
     display_message("initting font");
-    char ttf_buffer[1<<25];
+    unsigned char ttf_buffer[1<<25];
 
     stbtt_fontinfo font;
     unsigned char *bitmap;
