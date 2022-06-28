@@ -341,8 +341,8 @@ int init_font() {
             /* if ((x_offset+bmp_width_in_px) % 8 != 0) */
                 /* ++bit_ptr; */
 
-            bit_ptr += (int)((char_width_in_px-x_end) >> 3) + (char_width_in_px % 8 != 0);
-            printf(" -- to end of line : %i -- ", (int)((char_width_in_px-x_end) >> 3) + (char_width_in_px % 8 != 0));
+            bit_ptr += (int)((char_width_in_px-(x_end-1)) >> 3) + (char_width_in_px % 8 != 0);
+            printf(" -- to end of line : %i -- ", (int)((char_width_in_px-(x_end-1)) >> 3) + (char_width_in_px % 8 != 0));
             bit_ptr += (int)(x_start/8.0);
             printf("to start in new line: %i \n", (int)(x_start/8.0));
             printf("x_start: %i\n", x_start);
