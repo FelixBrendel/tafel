@@ -204,6 +204,10 @@ int init_display () {
     Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 90, WHITE);
     Paint_Clear(WHITE);
 
+    display_message("initting font");
+
+    
+
     return 0;
 }
 

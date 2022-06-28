@@ -439,7 +439,15 @@ namespace db {
             .user_data  = &timetable
         });
 
+        xml::push_handler_to_parser_stack({
+            .key        = "?xml",
+            .open_hook  = [](void*){},
+        });
+
+
         xml::parse(res.response.data);
+
+        xml::pop_handler_from_parser_stack();
         xml::pop_handler_from_parser_stack();
 
         return timetable;
