@@ -216,7 +216,7 @@ int init_font() {
 
     int   unicode_map_start = 0;
     int   unicode_map_end   = 0xff;
-    int   unicode_map_size  = unicode_map_end - unicode_map_start;
+    int   unicode_map_size  = unicode_map_end - unicode_map_start+1;
 
     int   char_height_in_px = 12;
     int   char_width_in_px;
@@ -246,7 +246,7 @@ int init_font() {
 
     printf("total_byte_size : %i\n", total_byte_size);
 
-    for (int cp = unicode_map_start; cp <= unicode_map_end; ++cp) {
+    for (int cp = 'g'; cp <= 'g'; ++cp) {
         printf("Generating letter for cp: %i\n", cp);
 
         int width;
@@ -262,12 +262,28 @@ int init_font() {
         int x_start = x_offset;
         int x_end   = x_offset+width;
 
+        printf("x start: %d\n"
+               "y start: %d\n"
+               "x end  : %d\n"
+               "y end  : %d\n", x_start, y_start, x_end, y_end);
+
         uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0))];
+
+        printf("original ptr: %lu", bit_ptr-font_data);
+
         bit_ptr += y_start * ((width % 8 == 0) ? width/8 : width/8 + 1);
+
+        printf("ptr + y: %lu", bit_ptr-font_data);
+
         // bit_ptr += y_start * (width/8 + (width % 8 == 0));
         bit_ptr += x_start / 8;
 
+        printf("ptr + x: %lu", bit_ptr-font_data);
+
         unsigned char shift = x_start % 8;
+
+        printf("shift: %i", shift);
+
         for (int y = y_start; y < y_end; ++y) {
             for (int x = x_start; x < x_end; ++x) {
                 uint8_t pixel = bitmap[width*(y-y_start)+(x-x_start)];
