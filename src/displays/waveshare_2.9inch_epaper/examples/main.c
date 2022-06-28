@@ -247,6 +247,33 @@ int init_font() {
 
     printf("total_byte_size : %i\n", total_byte_size);
 
+    auto test = [&](int codepoint) {
+
+        int w,h,i,j;
+        int x_offset;
+        int y_offset;
+        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, &x_offset, &y_offset);
+
+        for (j=0; j < h; ++j) {
+            for (i=0; i < w; ++i)
+                putchar(" .:ioVM@"[bitmap[j*w+i]>>5]);
+            putchar('\n');
+        }
+
+        printf("width: %d, height: %d\n", w, h);
+        printf("x_offset: %d y_offset: %d\n", x_offset, y_offset);
+
+
+        int adv_x;
+        int left_bearing;
+        stbtt_GetCodepointHMetrics(&font, codepoint, &adv_x, &left_bearing);
+
+        float f_adv_x = adv_x * font_scale;
+        float f_left_bearing = left_bearing * font_scale;
+        printf("advance x: %f left_bearing: %f\n", f_adv_x, f_left_bearing);
+
+    };
+
     for (int cp = unicode_map_start; cp <= unicode_map_end; ++cp) {
         printf("Generating letter for cp: %i\n", cp);
 
@@ -324,36 +351,12 @@ int init_font() {
                 printf("\n");
             }
             printf("Generating letter for cp: %i\n", cp);
+            test(cp);// ü
         }
     }
 
 
-    auto test = [&](int codepoint) {
 
-        int w,h,i,j;
-        int x_offset;
-        int y_offset;
-        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, &x_offset, &y_offset);
-
-        for (j=0; j < h; ++j) {
-            for (i=0; i < w; ++i)
-                putchar(" .:ioVM@"[bitmap[j*w+i]>>5]);
-            putchar('\n');
-        }
-
-        printf("width: %d, height: %d\n", w, h);
-        printf("x_offset: %d y_offset: %d\n", x_offset, y_offset);
-
-
-        int adv_x;
-        int left_bearing;
-        stbtt_GetCodepointHMetrics(&font, codepoint, &adv_x, &left_bearing);
-
-        float f_adv_x = adv_x * font_scale;
-        float f_left_bearing = left_bearing * font_scale;
-        printf("advance x: %f left_bearing: %f\n", f_adv_x, f_left_bearing);
-
-    };
 
     /* test(2); */
     /* test('a'); */
@@ -361,7 +364,7 @@ int init_font() {
     /* test('@'); */
     /* test('/'); */
     /* test(0xe4);// ü */
-    test('g');// ü
+
 
     /* { */
     /*     int bb_x0; */
