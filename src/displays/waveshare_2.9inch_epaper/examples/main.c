@@ -314,9 +314,9 @@ int init_font() {
                 for (int b = 0; b < (int)ceil(unicode_font.Width / 8.0); ++b) {
                     for (int i = 8; i >= 0; --i) {
                         if (*bit_ptr & (1 << i)) {
-                            printf("  ");
-                        } else {
                             printf("@@");
+                        } else {
+                            printf("  ");
                         }
                     }
                     ++bit_ptr;
