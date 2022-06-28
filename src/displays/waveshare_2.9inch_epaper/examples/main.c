@@ -348,6 +348,7 @@ int init_font() {
             printf("x_start: %i\n", x_start);
             printf("x_end: %i\n", x_end);
             printf("char_width_in_px: %i\n", char_width_in_px);
+            printf("current shift: %i\n", shift);
 
             shift = 7-(x_start % 8);
         }
