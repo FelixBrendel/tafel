@@ -293,7 +293,7 @@ int init_font() {
                 *bit_ptr |= (bit << shift);
 
                 --shift;
-                if (shift == -1) {
+                if (shift == 0) {
                     shift = 7;
                     ++bit_ptr;
                 }
