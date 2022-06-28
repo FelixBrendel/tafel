@@ -282,7 +282,7 @@ int init_font() {
 
     };
 
-    for (int cp = 'a'; cp <= 'z'; ++cp) {
+    for (int cp = unicode_map_start; cp <= unicode_map_end; ++cp) {
         printf("Generating letter for cp: %i\n", cp);
 
         int bmp_width_in_px;
