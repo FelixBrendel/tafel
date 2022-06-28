@@ -12,7 +12,6 @@
 
 #include "../../display.h"
 
-#define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 
 #define array_length(arr) sizeof((arr))/sizeof((arr)[0])
@@ -213,8 +212,10 @@ int init_font() {
 
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
 
+    float font_scale = stbtt_ScaleForPixelHeight(&font, s);
+
     auto test = [&](int codepoint) {
-        bitmap = stbtt_GetCodepointBitmap(&font, 0,stbtt_ScaleForPixelHeight(&font, s), codepoint, &w, &h, 0,0);
+        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, 0,0);
 
         for (j=0; j < h; ++j) {
             for (i=0; i < w; ++i)
@@ -237,7 +238,13 @@ int init_font() {
         int bb_y0;
         int bb_y1;
         stbtt_GetFontBoundingBox(&font, &bb_x0, &bb_y0, &bb_x1, &bb_y1);
-        printf("bounding box: %d %d %d %d\n", bb_x0, bb_y0, bb_x1, bb_y1);
+
+        float fbb_x0 = bb_x0 * font_scale;
+        float fbb_x1 = bb_x1 * font_scale;
+        float fbb_y0 = bb_y0 * font_scale;
+        float fbb_y1 = bb_y1 * font_scale;
+
+        printf("bounding box: %f %f %f %f\n", fbb_x0, fbb_y0, fbb_x1, fbb_y1);
     }
 
     return 0;
