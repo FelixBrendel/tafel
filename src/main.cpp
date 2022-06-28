@@ -277,7 +277,9 @@ int main() {
         while(1) {
             maybe_update_software();
 
-            sleep_in_sec(30);
+            // sleep_in_sec(30);
+            int d;
+            scanf("%d", &d);
         }
 #endif
     }

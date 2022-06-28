@@ -215,7 +215,10 @@ int init_font() {
     float font_scale = stbtt_ScaleForPixelHeight(&font, s);
 
     auto test = [&](int codepoint) {
-        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, 0,0);
+
+        int x_off;
+        int y_off;
+        bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, codepoint, &w, &h, &x_off, &y_off);
 
         for (j=0; j < h; ++j) {
             for (i=0; i < w; ++i)
@@ -224,6 +227,7 @@ int init_font() {
         }
 
         printf("width: %d, height: %d\n", w, h);
+        printf("x_offset: %d y_offset: %d\n", x_offset, y_offset);
 
 
         int adv_x;
@@ -232,8 +236,8 @@ int init_font() {
 
         float f_adv_x = adv_x * font_scale;
         float f_left_bearing = left_bearing * font_scale;
-
         printf("advance x: %f left_bearing: %f\n", f_adv_x, f_left_bearing);
+
     };
 
     test('a');
@@ -241,6 +245,7 @@ int init_font() {
     test('@');
     test('/');
     test(0xe4);// ü
+    test('g');// ü
 
     {
         int bb_x0;
