@@ -324,7 +324,7 @@ int init_font() {
             int x;
             for (x = max(0, x_start); x < min(x_end, char_width_in_px); ++x) {
                 uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
-                uint8_t bit   = pixel >= 0x01;
+                uint8_t bit   = pixel >= 0xa0;
 
                 *bit_ptr |= (bit << shift);
 
