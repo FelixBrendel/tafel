@@ -196,7 +196,7 @@ int demo() {
 
 int init_font() {
     display_message("initting font");
-    unsigned char* ttf_buffer = malloc(1<<25);
+    unsigned char* ttf_buffer = (unsigned char*)malloc(1<<25);
 
     stbtt_fontinfo font;
     unsigned char *bitmap;
