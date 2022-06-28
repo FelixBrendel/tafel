@@ -280,6 +280,22 @@ int init_fonts() {
         float f_left_bearing = left_bearing * font_scale;
         printf("advance x: %f left_bearing: %f\n", f_adv_x, f_left_bearing);
 
+
+        uint8_t *bit_ptr = &font_data[codepoint * unicode_font.Height * (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0))];
+        for (int y = 0; y < unicode_font.Height; ++y) {
+            for (int b = 0; b < (int)ceil(unicode_font.Width / 8.0); ++b) {
+                for (int i = 7; i >= 0; --i) {
+                    if (*bit_ptr & (1 << i)) {
+                        printf("@@");
+                    } else {
+                        printf("  ");
+                    }
+                }
+                printf("|");
+                ++bit_ptr;
+            }
+            printf("\n");
+        }
     };
 
     for (int cp = unicode_map_start; cp <= unicode_map_end; ++cp) {
@@ -298,27 +314,28 @@ int init_fonts() {
         int x_start = x_offset;
         int x_end   = x_offset+bmp_width_in_px;
 
-        printf("x start: %d\n"
-               "y start: %d\n"
-               "x end  : %d\n"
-               "y end  : %d\n", x_start, y_start, x_end, y_end);
+        /* printf("x start: %d\n" */
+               /* "y start: %d\n" */
+               /* "x end  : %d\n" */
+               /* "y end  : %d\n", x_start, y_start, x_end, y_end); */
 
         int bytes_per_line = (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0));
-        printf("bytes-per-line: %i\n", bytes_per_line);
+        /* printf("bytes-per-line: %i\n", bytes_per_line); */
 
         uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * bytes_per_line];
 
-        printf("original ptr: %lu\n", bit_ptr-font_data);
+        /* printf("original ptr: %lu\n", bit_ptr-font_data); */
 
         bit_ptr += y_start * bytes_per_line;
 
-        printf("ptr + y: %lu\n", bit_ptr-font_data);
+        /* printf("ptr + y: %lu\n", bit_ptr-font_data); */
         bit_ptr += x_start / 8;
 
-        printf("ptr + x: %lu\n", bit_ptr-font_data);
+        /* printf("ptr + x: %lu\n", bit_ptr-font_data); */
+
         int shift = 7-(x_start % 8);
 
-        printf("shift: %i\n", shift);
+        /* printf("shift: %i\n", shift); */
 
         int y;
         for (y = max(0, y_start); y < min(y_end, char_height_in_px); ++y) {
@@ -337,38 +354,20 @@ int init_fonts() {
             }
 
             bit_ptr += (int)((bytes_per_line*8-x-1) / 8) + 1;
-            printf(" -- to end of line : %i -- ", (int)((bytes_per_line*8 - x -1) / 8) + 1);
+            /* printf(" -- to end of line : %i -- ", (int)((bytes_per_line*8 - x -1) / 8) + 1); */
             bit_ptr += (int)(x_start/8.0);
-            printf("to start in new line: %i \n", (int)(x_start/8.0));
-            printf("x_start: %i\n", x_start);
-            printf("x_end: %i\n", x_end);
-            printf("char_width_in_px: %i\n", char_width_in_px);
-            printf("current shift: %i\n", shift);
+            /* printf("to start in new line: %i \n", (int)(x_start/8.0)); */
+            /* printf("x_start: %i\n", x_start); */
+            /* printf("x_end: %i\n", x_end); */
+            /* printf("char_width_in_px: %i\n", char_width_in_px); */
+            /* printf("current shift: %i\n", shift); */
 
             shift = 7-(x_start % 8);
         }
 
-
-        {
-            uint8_t *bit_ptr = &font_data[cp * unicode_font.Height * (unicode_font.Width / 8 + (unicode_font.Width % 8 ? 1 : 0))];
-            for (int y = 0; y < unicode_font.Height; ++y) {
-                for (int b = 0; b < (int)ceil(unicode_font.Width / 8.0); ++b) {
-                    for (int i = 7; i >= 0; --i) {
-                        if (*bit_ptr & (1 << i)) {
-                            printf("@@");
-                        } else {
-                            printf("  ");
-                        }
-                    }
-                    printf("|");
-                    ++bit_ptr;
-                }
-                printf("\n");
-            }
-            printf("Generating letter for cp: %i\n", cp);
-            test(cp);// ü
-        }
     }
+
+    test(0xac00);// ü
 
 
 
