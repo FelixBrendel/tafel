@@ -223,7 +223,7 @@ int init_font() {
         }
 
         printf("width: %d, height: %d\n", w, h);
-    }
+    };
 
     test('a');
     test('W');
