@@ -224,6 +224,7 @@ int init_font() {
     stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
     char_width_in_px = ceil(char_width_in_px*font_scale);
 
+    printf("generating font for width: %i height: %i\n", char_width_in_px, char_height_in_px);
 
     int ascend;
     int descend;
