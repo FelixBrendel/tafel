@@ -212,6 +212,10 @@ int init_font() {
 
     stbtt_InitFont(&font, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0));
 
+    int   unicode_map_start = 0;
+    int   unicode_map_end   = 0xff;
+    int   unicode_map_size  = unicode_map_end - unicode_map_start;
+
     int   char_height_in_px = 50;
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
@@ -220,6 +224,8 @@ int init_font() {
     // get number of bytes per pixel line per char
     int bytes_per_line = (char_width_in_px % 8 == 0) ? (char_width_in_px / 8) : ((char_width_in_px / 8) + 1);
 
+    int total_byte_size = unicode_map_size * char_height_in_px * bytes_per_line;
+    printf("total_byte_size : %i\n", total_byte_size);
 
 
     auto test = [&](int codepoint) {
