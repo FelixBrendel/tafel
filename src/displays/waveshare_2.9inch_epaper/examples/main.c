@@ -321,6 +321,7 @@ int init_fonts() {
                                           &x_offset, &y_offset);
 
 
+        memset(bitmap_memory, 0, char_width_in_px*char_height_in_px);
         float sub_x, sub_y;
         stbtt_MakeCodepointBitmapSubpixelPrefilter(&font, bitmap_memory,
                                                    char_width_in_px, char_height_in_px,
