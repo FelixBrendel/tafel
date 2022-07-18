@@ -229,6 +229,7 @@ int init_fonts() {
     int   unicode_map_end   = 0x00ff;
     int   unicode_map_size  = unicode_map_end - unicode_map_start + 1;
 
+    int   threashold        = 0x50 // lower = more black pixels
     int   char_height_in_px = 17;
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
@@ -345,7 +346,7 @@ int init_fonts() {
             int x;
             for (x = max(0, x_start); x < min(x_end, char_width_in_px); ++x) {
                 uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
-                uint8_t bit   = pixel >= 0x80;
+                uint8_t bit   = pixel >= threashold;
 
                 *bit_ptr |= (bit << shift);
 
