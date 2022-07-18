@@ -212,7 +212,8 @@ int init_fonts() {
     unsigned char *bitmap;
 
     /* FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-Thin.ttf", "rb"); */
-    FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-Medium.ttf", "rb");
+    /* FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-Medium.ttf", "rb"); */
+    FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-Thin.ttf", "rb");
     if (!font_file) {
         fprintf(stderr, "could not open ttf file");
         return 1;
