@@ -179,9 +179,6 @@ int main() {
     init_display();
     defer { deinit_display(); };
 
-    display_message("가가각");
-    return 0;
-
     char db_client_id[33];
     char db_client_secret[33];
     memset(db_client_id,     0, sizeof(db_client_id));
