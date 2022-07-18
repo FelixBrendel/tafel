@@ -324,8 +324,8 @@ int init_fonts() {
         {
             memset(bitmap_memory, 0, char_width_in_px*char_height_in_px);
             float sub_x, sub_y;
-            bmp_width_in_px = char_width_in_px;
-            bmp_height_in_px_in_px = char_height_in_px;
+            bmp_width_in_px  = char_width_in_px;
+            bmp_height_in_px = char_height_in_px;
             stbtt_MakeCodepointBitmap(&font, bitmap_memory,
                                       char_width_in_px, char_height_in_px,
                                       char_width_in_px, // TODO(Felix): stride
