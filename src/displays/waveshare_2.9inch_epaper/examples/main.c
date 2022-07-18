@@ -324,7 +324,7 @@ int init_fonts() {
         float sub_x, sub_y;
         stbtt_MakeCodepointBitmapSubpixelPrefilter(&font, bitmap_memory,
                                                    char_width_in_px, char_height_in_px,
-                                                   0, // TODO(Felix): stride
+                                                   char_width_in_px, // TODO(Felix): stride
                                                    0, font_scale, // font scales x and y
                                                    0, 0, // subpixel shift x and y
                                                    2, 2, // oversample x and y
