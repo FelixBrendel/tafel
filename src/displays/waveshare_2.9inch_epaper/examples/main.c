@@ -229,7 +229,7 @@ int init_fonts() {
     int   unicode_map_end   = 0x00ff;
     int   unicode_map_size  = unicode_map_end - unicode_map_start + 1;
 
-    int   threashold        = 0x01; // lower = more black pixels
+    int   threashold        = 0x60; // lower = more black pixels
     int   char_height_in_px = 16;
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
@@ -336,7 +336,7 @@ int init_fonts() {
                                                        char_width_in_px, // TODO(Felix): stride
                                                        font_scale, font_scale, // font scales x and y
                                                        0, 0, // subpixel shift x and y
-                                                       1, 1, // oversample x and y
+                                                       2, 2, // oversample x and y
                                                        &sub_x, &sub_y,
                                                        cp);
 
