@@ -227,7 +227,7 @@ int init_fonts() {
     int   unicode_map_end   = 0x00ff;
     int   unicode_map_size  = unicode_map_end - unicode_map_start + 1;
 
-    int   char_height_in_px = 24;
+    int   char_height_in_px = 18;
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
     stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
