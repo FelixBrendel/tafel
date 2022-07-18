@@ -326,7 +326,7 @@ int init_fonts() {
         stbtt_MakeCodepointBitmap(&font, bitmap_memory,
                                   char_width_in_px, char_height_in_px,
                                   char_width_in_px, // TODO(Felix): stride
-                                  0, font_scale, // font scales x and y
+                                  font_scale, font_scale, // font scales x and y
                                   cp);
         /* stbtt_MakeCodepointBitmapSubpixelPrefilter(&font, bitmap_memory, */
         /*                                            char_width_in_px, char_height_in_px, */
