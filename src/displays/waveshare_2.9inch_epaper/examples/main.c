@@ -229,7 +229,7 @@ int init_fonts() {
     int   unicode_map_end   = 0x00ff;
     int   unicode_map_size  = unicode_map_end - unicode_map_start + 1;
 
-    int   threashold        = 0x58; // lower = more black pixels
+    int   threashold        = 0x01; // lower = more black pixels
     int   char_height_in_px = 16;
     int   char_width_in_px;
     float font_scale  = stbtt_ScaleForPixelHeight(&font, char_height_in_px);
