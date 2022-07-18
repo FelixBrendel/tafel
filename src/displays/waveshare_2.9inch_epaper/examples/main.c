@@ -321,22 +321,26 @@ int init_fonts() {
                                           &x_offset, &y_offset);
 
 
-        memset(bitmap_memory, 0, char_width_in_px*char_height_in_px);
-        float sub_x, sub_y;
-        stbtt_MakeCodepointBitmap(&font, bitmap_memory,
-                                  char_width_in_px, char_height_in_px,
-                                  char_width_in_px, // TODO(Felix): stride
-                                  font_scale, font_scale, // font scales x and y
-                                  cp);
-        /* stbtt_MakeCodepointBitmapSubpixelPrefilter(&font, bitmap_memory, */
-        /*                                            char_width_in_px, char_height_in_px, */
-        /*                                            char_width_in_px, // TODO(Felix): stride */
-        /*                                            0, font_scale, // font scales x and y */
-        /*                                            0, 0, // subpixel shift x and y */
-        /*                                            1, 1, // oversample x and y */
-        /*                                            &sub_x, &sub_y, */
-        /*                                            cp); */
-
+        {
+            memset(bitmap_memory, 0, char_width_in_px*char_height_in_px);
+            float sub_x, sub_y;
+            bmp_width_in_px = char_width_in_px;
+            bmp_height_in_px_in_px = char_height_in_px;
+            stbtt_MakeCodepointBitmap(&font, bitmap_memory,
+                                      char_width_in_px, char_height_in_px,
+                                      char_width_in_px, // TODO(Felix): stride
+                                      font_scale, font_scale, // font scales x and y
+                                      cp);
+            /* stbtt_MakeCodepointBitmapSubpixelPrefilter(&font, bitmap_memory, */
+            /*                                            char_width_in_px, char_height_in_px, */
+            /*                                            char_width_in_px, // TODO(Felix): stride */
+            /*                                            0, font_scale, // font scales x and y */
+            /*                                            0, 0, // subpixel shift x and y */
+            /*                                            1, 1, // oversample x and y */
+            /*                                            &sub_x, &sub_y, */
+            /*                                            cp); */
+        }
+        
         int y_start = ascend+y_offset;
         int y_end   = ascend+y_offset+bmp_height_in_px;
         int x_start = x_offset;
