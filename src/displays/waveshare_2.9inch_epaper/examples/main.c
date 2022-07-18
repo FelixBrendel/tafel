@@ -328,7 +328,7 @@ int init_fonts() {
                                                    char_width_in_px, // TODO(Felix): stride
                                                    0, font_scale, // font scales x and y
                                                    0, 0, // subpixel shift x and y
-                                                   2, 2, // oversample x and y
+                                                   1, 1, // oversample x and y
                                                    &sub_x, &sub_y,
                                                    cp);
 
