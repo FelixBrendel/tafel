@@ -213,7 +213,8 @@ int init_fonts() {
 
     /* FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-Thin.ttf", "rb"); */
     /* FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-Medium.ttf", "rb"); */
-    FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-ExtraLight.ttf", "rb");
+    /* FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-ExtraLight.ttf", "rb"); */
+    FILE* font_file = fopen("./fonts/noto sans mono/static/NotoSansMono/NotoSansMono-Light.ttf", "rb");
     if (!font_file) {
         fprintf(stderr, "could not open ttf file");
         return 1;
