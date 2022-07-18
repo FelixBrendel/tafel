@@ -339,8 +339,18 @@ int init_fonts() {
             /*                                            1, 1, // oversample x and y */
             /*                                            &sub_x, &sub_y, */
             /*                                            cp); */
+
+            printf("my vis:\n");
+            for (int y = 0; y < bmp_height_in_px; ++y) {
+                for (int x = 0; x < bmp_width_in_px; ++x) {
+                    if (bitmap_memory[x+y*bmp_width_in_px] > threashold)
+                        printf("@@");
+                    else printf("  ");
+                }
+                printf("\n");
+            }
         }
-        
+
         int y_start = ascend+y_offset;
         int y_end   = ascend+y_offset+bmp_height_in_px;
         int x_start = x_offset;
