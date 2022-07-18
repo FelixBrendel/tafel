@@ -577,7 +577,8 @@ void display_timetable(Simple_Timetable timetable, Language lang, Font_Size gs) 
 
         for(unsigned i = 0; i < timetable.num_entries && i < 6; i++) {
             Paint_DrawString_EN(x_base_lines[LINE],   y_base_line, timetable.entries[i].line,         &Font12, WHITE, BLACK);
-            Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, timetable.entries[i].destination,  &Font12, WHITE, BLACK);
+            draw_unicode_string(x_base_lines[DEST],   y_base_line, timetable.entries[i].destination,  &unicode_font, WHITE, BLACK);
+            /* Paint_DrawString_EN(x_base_lines[DEST],   y_base_line, timetable.entries[i].destination,  &Font12, WHITE, BLACK); */
             Paint_DrawString_EN(x_base_lines[TRACK],  y_base_line, timetable.entries[i].track,        &Font12, WHITE, BLACK);
 
             draw_signed_number(x_base_lines[IN_MIN],  y_base_line, timetable.entries[i].planned_time, &Font12, WHITE, BLACK, false);
