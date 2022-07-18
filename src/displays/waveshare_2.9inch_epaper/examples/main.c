@@ -236,6 +236,12 @@ int init_fonts() {
     stbtt_GetCodepointHMetrics(&font, 'W', &char_width_in_px, NULL);
     char_width_in_px = ceil(char_width_in_px*font_scale);
 
+    uint8_t* bitmap_memory = (uint8_t*)malloc(char_height_in_px*char_width_in_px);
+    if (!bitmap_memory) {
+        fprintf(stderr, "could not open allocate memory for char bitmap\n");
+        return 1;
+    }
+
     printf("generating font for width: %i height: %i\n", char_width_in_px, char_height_in_px);
 
     int ascend;
@@ -311,7 +317,19 @@ int init_fonts() {
         int y_offset;
 
         bitmap = stbtt_GetCodepointBitmap(&font, 0, font_scale, cp,
-                                          &bmp_width_in_px, &bmp_height_in_px, &x_offset, &y_offset);
+                                          &bmp_width_in_px, &bmp_height_in_px,
+                                          &x_offset, &y_offset);
+
+
+        float sub_x, sub_y;
+        stbtt_MakeCodepointBitmapSubpixelPrefilter(&font, bitmap_memory,
+                                                   char_width_in_px, char_height_in_px,
+                                                   0, // TODO(Felix): stride
+                                                   0, font_scale, // font scales x and y
+                                                   0, 0, // subpixel shift x and y
+                                                   2, 2, // oversample x and y
+                                                   &sub_x, &sub_y,
+                                                   cp);
 
         int y_start = ascend+y_offset;
         int y_end   = ascend+y_offset+bmp_height_in_px;
