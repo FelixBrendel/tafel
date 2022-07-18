@@ -365,6 +365,7 @@ int init_fonts() {
             shift = 7-(x_start % 8);
         }
 
+        test(cp);
     }
 
     /* test(0xac00);// ü */
