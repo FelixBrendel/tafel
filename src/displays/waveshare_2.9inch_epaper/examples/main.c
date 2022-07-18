@@ -364,7 +364,8 @@ int init_fonts() {
         for (y = max(0, y_start); y < min(y_end, char_height_in_px); ++y) {
             int x;
             for (x = max(0, x_start); x < min(x_end, char_width_in_px); ++x) {
-                uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)];
+                /* uint8_t pixel = bitmap[bmp_width_in_px*(y-y_start)+(x-x_start)]; */
+                uint8_t pixel = bitmap_memory[bmp_width_in_px*(y-y_start)+(x-x_start)];
                 uint8_t bit   = pixel >= threashold;
 
                 *bit_ptr |= (bit << shift);
